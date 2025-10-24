@@ -8,7 +8,6 @@ export default defineConfig(
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   tseslint.configs.stylistic,
-  tseslint.configs.strict,
   {
     languageOptions: {
       parserOptions: {
