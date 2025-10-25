@@ -5,7 +5,10 @@ import { Input } from './ui/input';
 import { useState } from 'react';
 import { signUp } from '@/lib/auth-client'; // Assuming this is your better-auth client function
 
-export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
+export function SignupForm({
+  onSwitchForm,
+  ...props
+}: React.ComponentProps<typeof Card> & { onSwitchForm: (form: 'signup' | 'login') => void }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +31,7 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
 
     setIsLoading(true);
     try {
-      const response = await signUp.email({ name, email, password });
+      const response = await signUp.email({ name, email, password, callbackURL: '/me' });
       if (response.error) {
         setError(response.error.message || 'An unknown error occurred during sign up.');
       }
@@ -127,7 +130,14 @@ export function SignupForm({ ...props }: React.ComponentProps<typeof Card>) {
                   Sign up with Google
                 </Button>
                 <FieldDescription className="px-6 text-center">
-                  Already have an account? <a href="#">Sign in</a>
+                  <Button
+                    variant="link"
+                    type="button"
+                    onClick={() => onSwitchForm('login')}
+                    className="p-0 font-normal"
+                  >
+                    Sign in
+                  </Button>
                 </FieldDescription>
               </Field>
             </FieldGroup>

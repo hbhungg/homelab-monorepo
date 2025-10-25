@@ -29,6 +29,8 @@ import { Pool } from 'pg';
         const auth = betterAuth({
           database: pool,
           emailAndPassword: { enabled: true },
+          basePath: '/api/auth',
+          trustedOrigins: ['http://localhost:5173'],
           // fetchOptions: { throw: true },
         });
         return { auth: auth };

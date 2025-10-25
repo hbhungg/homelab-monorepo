@@ -7,13 +7,9 @@ import type { UserSession } from '@thallesp/nestjs-better-auth';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
   @Get('me')
   getProfile(@Session() session: UserSession) {
+    console.log(session);
     return { user: session.user };
   }
 
