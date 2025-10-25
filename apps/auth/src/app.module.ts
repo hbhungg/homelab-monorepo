@@ -29,9 +29,8 @@ import { Pool } from 'pg';
         const auth = betterAuth({
           database: pool,
           emailAndPassword: { enabled: true },
-          fetchOptions: { throw: true },
+          // fetchOptions: { throw: true },
         });
-        console.log(auth);
         return { auth: auth };
       },
       isGlobal: true,
