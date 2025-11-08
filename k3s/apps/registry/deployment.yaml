@@ -21,6 +21,14 @@ spec:
         env:
           - name: OTEL_TRACES_EXPORTER
             value: "none"
+          # - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin
+          #   value: '["http://dashboard.registry.home"]'
+          # - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods
+          #   value: '["HEAD", "GET", "OPTIONS", "DELETE"]'
+          # - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials
+          #   value: '["true"]'
+          # - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers
+          #   value: '["Authorization", "Accept", "Content-Type"]'
         ports:
         - containerPort: 5000
         volumeMounts:
@@ -30,3 +38,37 @@ spec:
       - name: registry-storage
         persistentVolumeClaim:
           claimName: registry-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry-ui
+  namespace: infrastructure
+  labels:
+    app: registry-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry-ui
+  template:
+    metadata:
+      labels:
+        app: registry-ui
+    spec:
+      containers:
+      - name: registry-ui
+        image: joxit/docker-registry-ui:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: NGINX_PROXY_PASS_URL
+          value: "http://registry:5000"
+        - name: DELETE_IMAGES
+          value: "true"
+        - name: SHOW_CONTENT_DIGEST
+          value: "true"
+        - name: REGISTRY_TITLE
+          value: "Private Registry"
+        - name: SINGLE_REGISTRY
+          value: "true"
