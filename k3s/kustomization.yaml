@@ -4,10 +4,9 @@ resources:
   - secrets.yaml
   - namespaces.yaml
 
-  # Load your external configs
   - external/k1max.yaml
   - external/router.yaml
 
-  # Load ALL your applications
   - apps/homepage/
   - apps/noip/
+  - apps/registry/

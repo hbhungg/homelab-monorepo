@@ -4,3 +4,10 @@ metadata:
   name: external
   labels:
     type: external-devices
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infrastructure
+  labels:
+    type: infrastructure-services
