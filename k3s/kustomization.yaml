@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - secrets.yaml
+  - namespaces.yaml
+
+  # Load your external configs
+  - external/k1max.yaml
+  - external/router.yaml
+
+  # Load ALL your applications
+  - apps/homepage/
+  - apps/noip/
