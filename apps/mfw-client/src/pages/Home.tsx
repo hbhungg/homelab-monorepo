@@ -1,5 +1,5 @@
 // Export as default
-export default function Welcome() {
+export default function Home() {
   return (
     // 1. Page Wrapper:
     <div
@@ -26,8 +26,8 @@ export default function Welcome() {
               Login
             </a>
 
-            <a href="/signin" className="hover:text-gray-300 underline">
-              Sign in
+            <a href="/signup" className="hover:text-gray-300 underline">
+              Sign up
             </a>
           </div>
         </div>

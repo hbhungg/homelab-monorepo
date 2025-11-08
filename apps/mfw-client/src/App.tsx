@@ -1,42 +1,19 @@
-import { useState } from 'react';
 import './App.css';
-import { LoginForm } from './components/login-form';
-import { SignupForm } from './components/signup-form';
-import { ThemeProvider } from './components/theme-provider';
-import { Button } from './components/ui/button';
-import React from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import Welcome from './pages/WelcomePage';
-
-// function App() {
-//   const [show, setShow] = useState('signin');
-
-//   return (
-//     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-//       <div className="absolute top-4 right-4 flex gap-2">
-//         <Button variant="outline" onClick={() => setShow('signup')}>
-//           Sign Up
-//         </Button>
-//         <Button variant="outline" onClick={() => setShow('login')}>
-//           Sign In
-//         </Button>
-//       </div>
-//       <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-//         <div className="w-full max-w-sm">
-//           {show === 'signup' ? <SignupForm onSwitchForm={setShow} /> : <LoginForm onSwitchForm={setShow} />}
-//         </div>
-//       </div>
-//     </ThemeProvider>
-//   );
-// }
-
-// export default App;
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Profile from './pages/Profile';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Welcome />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/profile" element={<Profile />} />
+        {/* <Route path="/me" element={<Me />} /> */}
       </Routes>
     </BrowserRouter>
   );

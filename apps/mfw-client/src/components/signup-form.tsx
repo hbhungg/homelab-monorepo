@@ -4,11 +4,13 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from './ui/field';
 import { Input } from './ui/input';
 import { useState } from 'react';
 import { signUp } from '@/lib/auth-client'; // Assuming this is your better-auth client function
+import { useNavigate } from 'react-router-dom';
 
 export function SignupForm({
   onSwitchForm,
   ...props
-}: React.ComponentProps<typeof Card> & { onSwitchForm: (form: 'signup' | 'login') => void }) {
+}: React.ComponentProps<typeof Card> & { onSwitchForm?: (form: 'signup' | 'login') => void }) {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -133,7 +135,13 @@ export function SignupForm({
                   <Button
                     variant="link"
                     type="button"
-                    onClick={() => onSwitchForm('login')}
+                    onClick={() => {
+                      if (onSwitchForm) {
+                        onSwitchForm('login');
+                      } else {
+                        navigate('/login');
+                      }
+                    }}
                     className="p-0 font-normal"
                   >
                     Sign in

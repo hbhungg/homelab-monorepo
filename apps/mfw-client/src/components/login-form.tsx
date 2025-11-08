@@ -5,12 +5,14 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input';
 import { signIn } from '@/lib/auth-client';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export function LoginForm({
   className,
   onSwitchForm,
   ...props
-}: React.ComponentProps<'div'> & { onSwitchForm: (form: 'signup' | 'login') => void }) {
+}: React.ComponentProps<'div'> & { onSwitchForm?: (form: 'signup' | 'login') => void }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function LoginForm({
 
     setIsLoading(true);
     try {
-      const response = await signIn.email({ email, password, callbackURL: '/me' });
+      const response = await signIn.email({ email, password, callbackURL: '/profile' });
       if (response.error) {
         setError(response.error.message || 'An unknown error occurred during sign up.');
       }
@@ -88,7 +90,13 @@ export function LoginForm({
                   <Button
                     variant="link"
                     type="button"
-                    onClick={() => onSwitchForm('signup')}
+                    onClick={() => {
+                      if (onSwitchForm) {
+                        onSwitchForm('signup');
+                      } else {
+                        navigate('/signup');
+                      }
+                    }}
                     className="p-0 font-normal"
                   >
                     Sign up
