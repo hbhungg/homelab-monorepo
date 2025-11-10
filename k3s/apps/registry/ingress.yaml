@@ -25,6 +25,12 @@ metadata:
   namespace: infrastructure
   labels:
     app.kubernetes.io/name: registry-ui
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/description: Container Registry
+    gethomepage.dev/group: Infrastructure
+    gethomepage.dev/icon: docker.png
+    gethomepage.dev/name: Container Registry
 spec:
   rules:
     - host: "dashboard.registry.home"

@@ -21,14 +21,18 @@ spec:
         env:
           - name: OTEL_TRACES_EXPORTER
             value: "none"
-          # - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin
-          #   value: '["http://dashboard.registry.home"]'
-          # - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods
-          #   value: '["HEAD", "GET", "OPTIONS", "DELETE"]'
-          # - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials
-          #   value: '["true"]'
-          # - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers
-          #   value: '["Authorization", "Accept", "Content-Type"]'
+          - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin
+            value: '[http://registry-ui.example.com]'
+          - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods
+            value: '[HEAD,GET,OPTIONS,DELETE]'
+          - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials
+            value: '[true]'
+          - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers
+            value: '[Authorization,Accept,Cache-Control]'
+          - name: REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers
+            value: '[Docker-Content-Digest]'
+          - name: REGISTRY_STORAGE_DELETE_ENABLED
+            value: 'true'
         ports:
         - containerPort: 5000
         volumeMounts:
@@ -46,15 +50,18 @@ metadata:
   namespace: infrastructure
   labels:
     app: registry-ui
+    app.kubernetes.io/name: registry-ui
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: registry-ui
+      app.kubernetes.io/name: registry-ui
   template:
     metadata:
       labels:
         app: registry-ui
+        app.kubernetes.io/name: registry-ui
     spec:
       containers:
       - name: registry-ui
