@@ -13,11 +13,21 @@ data:
     title: Home Page
     theme: dark
     color: neutral
+    showStats: false
 
   custom.css: ""
   custom.js: ""
   bookmarks.yaml: ""
-  services.yaml: ""
+  services.yaml: |
+    - External:
+        - Router:
+            icon: router.png
+            href: http://router.home
+            description: Network Router
+        - Fluidd:
+            icon: fluidd.png
+            href: http://k1max.home
+            description: K1 Max 3D Printer
   widgets.yaml: |
     - kubernetes:
         cluster:
