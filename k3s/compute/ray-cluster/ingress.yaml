@@ -25,22 +25,19 @@ spec:
             port:
               number: 8265
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: v1
+kind: Service
 metadata:
-  name: ray-client
+  name: ray-compute-head-client
   namespace: compute
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
-  rules:
-  - host: client.ray.home
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: ray-compute-head-svc
-            port:
-              number: 10001
+  type: NodePort
+  selector:
+    ray.io/cluster: ray-compute
+    ray.io/node-type: head
+  ports:
+  - port: 10001
+    targetPort: 10001
+    nodePort: 30001
+    protocol: TCP
+    name: client

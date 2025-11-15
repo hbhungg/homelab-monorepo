@@ -19,7 +19,7 @@ spec:
           beta.kubernetes.io/arch: amd64
         containers:
         - name: ray-head
-          image: rayproject/ray:2.9.0
+          image: rayproject/ray:2.9.0-py311-cpu
           ports:
           - containerPort: 8265
             name: dashboard
@@ -47,7 +47,7 @@ spec:
           beta.kubernetes.io/arch: amd64
         containers:
         - name: ray-worker
-          image: rayproject/ray:2.9.0-gpu
+          image: rayproject/ray:2.9.0-py311-cpu
           resources:
             limits:
               cpu: "6"
