@@ -11,3 +11,10 @@ metadata:
   name: infrastructure
   labels:
     type: infrastructure-services
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: compute
+  labels:
+    type: compute-cluster
