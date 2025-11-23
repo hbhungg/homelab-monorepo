@@ -3,6 +3,8 @@ kind: Kustomization
 resources:
   - secrets.yaml
   - namespaces.yaml
+  - cert-manager.yaml
+  - cluster-issuer.yaml
 
   - external/k1max.yaml
   - external/router.yaml
@@ -10,3 +12,4 @@ resources:
   - apps/homepage/
   - apps/noip/
   - apps/registry/
+  - apps/mfw/
