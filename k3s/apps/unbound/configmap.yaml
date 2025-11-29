@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: unbound-config
+  namespace: infrastructure
+data:
+  unbound.conf: |
+    server:
+        # Network
+        interface: 0.0.0.0
+        port: 53
+        do-ip4: yes
+        do-ip6: no
+        do-udp: yes
+        do-tcp: yes
+        
+        # Performance
+        num-threads: 2
+        msg-cache-slabs: 4
+        rrset-cache-slabs: 4
+        infra-cache-slabs: 4
+        key-cache-slabs: 4
+        
+        # Cache settings
+        cache-min-ttl: 300
+        cache-max-ttl: 86400
+        msg-cache-size: 50m
+        rrset-cache-size: 100m
+        
+        # Prefetch for speed
+        prefetch: yes
+        prefetch-key: yes
+        
+        # Speed optimizations
+        outgoing-range: 8192
+        num-queries-per-thread: 4096
+        
+        # Local DNS entries for *.home
+        local-zone: "home." redirect
+        local-data: "home. IN A 192.168.0.201"
+        
+        # Minimal logging
+        verbosity: 1
+        log-queries: no
+        
+        # Access control
+        access-control: 0.0.0.0/0 allow
+        
+    # Forward to upstream DNS
+    forward-zone:
+        name: "."
+        forward-addr: 8.8.8.8
+        forward-addr: 1.1.1.1
+        forward-addr: 8.8.4.4
+        forward-addr: 1.0.0.1

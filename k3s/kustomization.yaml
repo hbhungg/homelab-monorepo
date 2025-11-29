@@ -13,3 +13,4 @@ resources:
   - apps/noip/
   - apps/registry/
   - apps/mfw/
+  - apps/unbound/
