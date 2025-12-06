@@ -23,11 +23,18 @@ spec:
               - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - ubuntu
+                - pi-1
       containers:
       - name: p3d-app
         image: registry.home/p3d-app:latest
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         ports:
           - containerPort: 3000
             name: http

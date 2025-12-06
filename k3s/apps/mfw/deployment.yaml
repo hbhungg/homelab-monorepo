@@ -15,10 +15,26 @@ spec:
       labels:
         app.kubernetes.io/name: mfw-srv
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - pi-1
       containers:
       - name: mfw-srv
         image: registry.home/mfw-srv:latest
         imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         ports:
           - containerPort: 3000
             name: http
