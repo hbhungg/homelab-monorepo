@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: p3d-app
+  namespace: default
+  labels:
+    app.kubernetes.io/name: p3d-app
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - "p3d.mfw.ddns.net"
+      secretName: p3d-app-tls-cert
+  rules:
+    - host: "p3d.mfw.ddns.net"
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: p3d-app
+                port:
+                  number: 3000
