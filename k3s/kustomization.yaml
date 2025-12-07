@@ -14,4 +14,5 @@ resources:
   - apps/registry/
   - apps/mfw/
   - apps/p3d-app/
+  - apps/postgres/
   # - apps/unbound/
