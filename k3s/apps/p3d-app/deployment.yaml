@@ -46,3 +46,17 @@ spec:
               secretKeyRef:
                 name: p3d-app-secret
                 key: CLERK_SECRET_KEY
+          - name: P3D_DB_HOST
+            value: postgres.default.svc.cluster.local:5432
+          - name: P3D_DB_USER
+            valueFrom:
+              secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+          - name: P3D_DB_PWD
+            valueFrom:
+              secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+          - name: P3D_DB_NAME
+            value: p3d_app
