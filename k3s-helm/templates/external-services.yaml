@@ -1,0 +1,31 @@
+{{- range $key, $svc := .Values.externalServices }}
+{{- if $svc.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $key }}
+  namespace: {{ $svc.namespace | default "default" }}
+spec:
+  ports:
+{{- range $svc.ports }}
+    - port: {{ .port }}
+      targetPort: {{ .targetPort | default .port }}
+      protocol: {{ .protocol | default "TCP" }}
+{{- end }}
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: {{ $key }}
+  namespace: {{ $svc.namespace | default "default" }}
+subsets:
+  - addresses:
+      - ip: {{ $svc.externalIP }}
+    ports:
+{{- range $svc.ports }}
+      - port: {{ .port }}
+        protocol: {{ .protocol | default "TCP" }}
+{{- end }}
+{{- end }}
+{{- end }}

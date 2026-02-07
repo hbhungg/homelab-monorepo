@@ -1,0 +1,75 @@
+{{- range $key, $app := .Values.apps }}
+{{- if and $app.enabled $app.stateful }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $key }}
+  labels:
+    app.kubernetes.io/name: {{ $key }}
+spec:
+  serviceName: {{ $key }}
+  replicas: {{ $app.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $key }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $key }}
+    spec:
+{{- if $app.affinity }}
+      affinity:
+{{ toYaml $app.affinity | indent 8 }}
+{{- end }}
+      containers:
+        - name: {{ $key }}
+          image: "{{ $app.image.repository }}:{{ $app.image.tag }}"
+{{- if $app.ports }}
+          ports:
+{{- range $app.ports }}
+            - name: {{ .name }}
+              containerPort: {{ .containerPort }}
+              protocol: {{ .protocol | default "TCP" }}
+{{- end }}
+{{- end }}
+{{- if $app.resources }}
+          resources:
+{{ toYaml $app.resources | indent 12 }}
+{{- end }}
+{{- if $app.env }}
+          env:
+{{- range $app.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+{{- end }}
+{{- end }}
+{{- if $app.envFrom }}
+          envFrom:
+{{- range $app.envFrom }}
+            - secretRef:
+                name: {{ .secretRef.name }}
+{{- end }}
+{{- end }}
+{{- if $app.persistence }}
+{{- if $app.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ $app.persistence.mountPath }}
+{{- end }}
+{{- end }}
+{{- if $app.persistence }}
+{{- if $app.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ $app.persistence.storageClass | default "local-path" }}
+        resources:
+          requests:
+            storage: {{ $app.persistence.size }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

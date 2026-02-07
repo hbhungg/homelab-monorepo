@@ -1,0 +1,247 @@
+# Apps configuration
+apps:
+  homepage:
+    enabled: true
+    image:
+      repository: ghcr.io/gethomepage/homepage
+      tag: latest
+    replicas: 1
+    serviceAccountName: homepage
+    ports:
+      - name: http
+        containerPort: 3000
+        protocol: TCP
+    volumeMounts:
+      - mountPath: /app/config/custom.js
+        name: homepage-config
+        subPath: custom.js
+      - mountPath: /app/config/logs
+        name: logs
+    volumes:
+      - name: homepage-config
+        configMap:
+          name: homepage
+      - name: logs
+        emptyDir: {}
+    env:
+      - name: HOMEPAGE_ALLOWED_HOSTS
+        value: homepage.home
+    ingress:
+      enabled: true
+      host: homepage.home
+
+  mfw:
+    enabled: true
+    image:
+      repository: registry.home/mfw-srv
+      tag: latest
+    replicas: 1
+    ports:
+      - name: http
+        containerPort: 3000
+        protocol: TCP
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - pi-1
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+    ingress:
+      enabled: true
+      hosts:
+        - mfw.ddns.net
+      tls:
+        - mfw.ddns.net
+
+  p3d-app:
+    enabled: true
+    image:
+      repository: registry.home/p3d-app
+      tag: latest
+    replicas: 1
+    ports:
+      - name: http
+        containerPort: 3000
+        protocol: TCP
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - pi-1
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 100m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+    env:
+      - name: NEXT_PUBLIC_BASE_URL
+        value: https://p3d.mfw.ddns.net/
+      - name: P3D_DB_HOST
+        value: postgres.default.svc.cluster.local
+      - name: P3D_DB_NAME
+        value: p3d_app
+    ingress:
+      enabled: true
+      hosts:
+        - p3d.home
+
+  registry:
+    enabled: true
+    image:
+      repository: registry
+      tag: "2"
+    replicas: 1
+    ports:
+      - name: http
+        containerPort: 5000
+        protocol: TCP
+    persistence:
+      enabled: true
+      size: 100Gi
+      mountPath: /var/lib/registry
+      storageClass: local-path
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - ubuntu
+    ingress:
+      enabled: true
+      host: registry.home
+
+  noip:
+    enabled: true
+    image:
+      repository: ghcr.io/noipcom/noip-duc
+      tag: latest
+    replicas: 1
+    envFrom:
+      - secretRef:
+          name: noip-secret
+
+  postgres:
+    enabled: true
+    stateful: true
+    image:
+      repository: postgres
+      tag: 17-alpine
+    replicas: 1
+    ports:
+      - name: postgres
+        containerPort: 5432
+        protocol: TCP
+    env:
+      - name: POSTGRES_PASSWORD
+        value: changeme
+      - name: POSTGRES_DB
+        value: homelab
+      - name: POSTGRES_USER
+        value: postgres
+    persistence:
+      enabled: true
+      size: 20Gi
+      mountPath: /var/lib/postgresql/data
+      storageClass: local-path
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - ubuntu
+
+  redis:
+    enabled: true
+    stateful: true
+    image:
+      repository: redis
+      tag: 7-alpine
+    replicas: 1
+    ports:
+      - name: redis
+        containerPort: 6379
+        protocol: TCP
+    persistence:
+      enabled: true
+      size: 8Gi
+      mountPath: /data
+      storageClass: local-path
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - ubuntu
+
+# Cert-manager (for TLS certificates from Let's Encrypt)
+cert-manager:
+  enabled: true
+  installCRDs: true
+  namespace: cert-manager
+  fullnameOverride: cert-manager
+
+# Cert-manager ClusterIssuer configuration
+certManager:
+  clusterIssuer:
+    enabled: true
+    name: letsencrypt-prod
+    email: hung.ba.huynh@proton.me
+    server: https://acme-v02.api.letsencrypt.org/directory
+
+# External services (services pointing to external IPs)
+externalServices:
+  k1max:
+    enabled: true
+    namespace: external
+    externalIP: 192.168.0.55
+    ports:
+      - port: 4408
+    ingress:
+      enabled: true
+      host: k1max.home
+
+  router:
+    enabled: true
+    namespace: external
+    externalIP: 192.168.0.1
+    ports:
+      - port: 80
+    ingress:
+      enabled: true
+      host: router.home
+
+# Namespaces to create
+namespaces:
+  - name: external

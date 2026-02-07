@@ -1,0 +1,18 @@
+{{- range $key, $app := .Values.apps }}
+{{- if and $app.enabled $app.persistence $app.persistence.enabled (not $app.stateful) }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $key }}-data
+  labels:
+    app.kubernetes.io/name: {{ $key }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ $app.persistence.storageClass | default "local-path" }}
+  resources:
+    requests:
+      storage: {{ $app.persistence.size }}
+{{- end }}
+{{- end }}
