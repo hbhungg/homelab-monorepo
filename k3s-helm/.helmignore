@@ -1,0 +1,8 @@
+.git
+.gitignore
+.idea/
+*.tmproj
+.vscode/
+victoria-metrics-data/
+data/
+*.sst

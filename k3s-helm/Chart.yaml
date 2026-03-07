@@ -14,3 +14,7 @@ dependencies:
     version: 3.12.2
     repository: https://kubernetes-sigs.github.io/metrics-server/
     condition: metrics-server.enabled
+  - name: victoria-metrics-k8s-stack
+    version: 0.72.4
+    repository: https://victoriametrics.github.io/helm-charts/
+    condition: victoria-metrics-k8s-stack.enabled

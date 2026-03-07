@@ -222,123 +222,86 @@ apps:
             loadbalance
         }
 
-  node-exporter:
-    enabled: true
-    daemonset: true
-    image:
-      repository: prom/node-exporter
-      tag: "v1.8.2"
-    ports:
-      - name: metrics
-        containerPort: 9100
-        hostPort: 9100
-        protocol: TCP
-    args:
-      - "--path.procfs=/host/proc"
-      - "--path.sysfs=/host/sys"
-      - "--path.rootfs=/host/root"
-      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
-    volumeMounts:
-      - name: proc
-        mountPath: /host/proc
-        readOnly: true
-      - name: sys
-        mountPath: /host/sys
-        readOnly: true
-      - name: root
-        mountPath: /host/root
-        mountPropagation: HostToContainer
-        readOnly: true
-    volumes:
-      - name: proc
-        hostPath:
-          path: /proc
-      - name: sys
-        hostPath:
-          path: /sys
-      - name: root
-        hostPath:
-          path: /
-    hostNetwork: true
-    hostPID: true
-    tolerations:
-      - effect: NoSchedule
-        key: ephemeral
-        operator: Equal
-        value: "true"
-
-  victoriametrics:
-    enabled: true
-    stateful: true
-    image:
-      repository: victoriametrics/victoria-metrics
-      tag: "v1.113.0"
-    replicas: 1
-    ports:
-      - name: http
-        containerPort: 8428
-        protocol: TCP
-    args:
-      - "-storageDataPath=/victoria-metrics-data"
-      - "-retentionPeriod=14d"
-      - "-selfScrapeInterval=10s"
-      - "-search.maxQueryDuration=60s"
-      - "-promscrape.config=/etc/vm-scrape-config/scrape.yml"
-    persistence:
-      enabled: true
-      size: 50Gi
-      mountPath: /victoria-metrics-data
-      storageClass: local-path
-    volumeMounts:
-      - name: scrape-config
-        mountPath: /etc/vm-scrape-config
-    volumes:
-      - name: scrape-config
-        configMap:
-          name: victoriametrics-scrape-config
-    resources:
-      requests:
-        memory: 512Mi
-        cpu: 250m
-      limits:
-        memory: 2Gi
-        cpu: 1000m
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: kubernetes.io/hostname
-                  operator: In
-                  values:
-                    - ubuntu
-    ingress:
-      enabled: true
-      host: metrics.homedev
-    scrapeConfig:
-      global:
-        scrape_interval: 15s
-      scrape_configs:
-        - job_name: 'victoriametrics'
-          static_configs:
-            - targets: ['localhost:8428']
-        - job_name: 'node-exporter'
-          kubernetes_sd_configs:
-            - role: node
-          relabel_configs:
-            - source_labels: [__address__]
-              regex: '([^:]+)(?::\d+)?'
-              replacement: '$1:9100'
-              target_label: __address__
-            - source_labels: [__meta_kubernetes_node_name]
-              target_label: node
-
 # Metrics Server (for kubectl top and k9s CPU/MEM stats)
 metrics-server:
   enabled: true
   args:
     - --kubelet-insecure-tls
     - --kubelet-preferred-address-types=InternalIP
+
+# Monitoring
+victoria-metrics-k8s-stack:
+  enabled: true
+
+  # Disable
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeProxy:
+    enabled: false
+  
+  # Required for k3s: Allow scraping self-signed kubelet & cAdvisor certs 
+  kubelet:
+    enabled: true
+    serviceMonitor:
+      kubelet:
+        insecureSkipVerify: true
+      cAdvisor:
+        insecureSkipVerify: true
+      probes:
+        insecureSkipVerify: true
+  
+  # Disable alert
+  alertmanager:
+    enabled: false
+  vmalert:
+    enabled: false
+  
+  # Grafana
+  grafana:
+    enabled: true
+    grafana.ini:
+      auth.anonymous:
+        enabled: true
+        org_role: Admin
+    ingress:
+      enabled: true
+      hosts:
+        - metrics.homedev
+  
+  prometheus-node-exporter:
+    tolerations:
+      - effect: NoSchedule
+        key: ephemeral
+        operator: Equal
+        value: "true"
+  
+  vmsingle:
+    enabled: true
+    spec:
+      retentionPeriod: "14d"
+      # Persist data using your local-path storage class
+      storage:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+        storageClassName: local-path
+      # Place the database on your ubuntu node
+      nodeSelector:
+        kubernetes.io/hostname: ubuntu
+      resources:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 2Gi
+          cpu: 1000m
+
 
 # Cert-manager (for TLS certificates from Let's Encrypt)
 cert-manager:
