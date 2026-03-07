@@ -63,44 +63,6 @@ apps:
       tls:
         - mfw.ddns.net
 
-  p3d-app:
-    enabled: true
-    image:
-      repository: registry.home/p3d-app
-      tag: latest
-    replicas: 1
-    ports:
-      - name: http
-        containerPort: 3000
-        protocol: TCP
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-            - matchExpressions:
-                - key: kubernetes.io/hostname
-                  operator: In
-                  values:
-                    - pi-1
-    resources:
-      requests:
-        memory: 128Mi
-        cpu: 100m
-      limits:
-        memory: 512Mi
-        cpu: 500m
-    env:
-      - name: NEXT_PUBLIC_BASE_URL
-        value: https://p3d.mfw.ddns.net/
-      - name: P3D_DB_HOST
-        value: postgres.default.svc.cluster.local
-      - name: P3D_DB_NAME
-        value: p3d_app
-    ingress:
-      enabled: true
-      hosts:
-        - p3d.home
-
   registry:
     enabled: true
     image:
@@ -204,6 +166,179 @@ apps:
                   operator: In
                   values:
                     - ubuntu
+
+  external-dns:
+    enabled: true
+    image:
+      repository: coredns/coredns
+      tag: "1.11.1"
+    replicas: 2
+    ports:
+      - name: dns
+        containerPort: 53
+        protocol: UDP
+      - name: dns-tcp
+        containerPort: 53
+        protocol: TCP
+    service:
+      type: NodePort
+      nodePort: 30053
+    args:
+      - "-conf"
+      - "/etc/coredns/Corefile"
+    volumeMounts:
+      - name: config-volume
+        mountPath: /etc/coredns
+    volumes:
+      - name: config-volume
+        configMap:
+          name: external-dns
+    configMap:
+      # CoreDNS Corefile configuration
+      # The {{TRAEFIK_IP}} placeholder will be replaced with the actual Traefik IP during deployment
+      corefile: |
+        .:53 {
+            errors
+            health {
+                lameduck 5s
+            }
+            ready
+            
+            # Handle *.homedev domains - IP dynamically looked up from traefik service
+            template IN A homedev {
+                match \.homedev\.$
+                answer "{{ .Name }} 60 IN A {{TRAEFIK_IP}}"
+                fallthrough
+            }
+            
+            # Forward all other queries to upstream DNS
+            forward . 8.8.8.8 8.8.4.4 {
+                max_concurrent 1000
+            }
+            
+            cache 30
+            loop
+            reload
+            loadbalance
+        }
+
+  node-exporter:
+    enabled: true
+    daemonset: true
+    image:
+      repository: prom/node-exporter
+      tag: "v1.8.2"
+    ports:
+      - name: metrics
+        containerPort: 9100
+        hostPort: 9100
+        protocol: TCP
+    args:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/host/root"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    volumeMounts:
+      - name: proc
+        mountPath: /host/proc
+        readOnly: true
+      - name: sys
+        mountPath: /host/sys
+        readOnly: true
+      - name: root
+        mountPath: /host/root
+        mountPropagation: HostToContainer
+        readOnly: true
+    volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: root
+        hostPath:
+          path: /
+    hostNetwork: true
+    hostPID: true
+    tolerations:
+      - effect: NoSchedule
+        key: ephemeral
+        operator: Equal
+        value: "true"
+
+  victoriametrics:
+    enabled: true
+    stateful: true
+    image:
+      repository: victoriametrics/victoria-metrics
+      tag: "v1.113.0"
+    replicas: 1
+    ports:
+      - name: http
+        containerPort: 8428
+        protocol: TCP
+    args:
+      - "-storageDataPath=/victoria-metrics-data"
+      - "-retentionPeriod=14d"
+      - "-selfScrapeInterval=10s"
+      - "-search.maxQueryDuration=60s"
+      - "-promscrape.config=/etc/vm-scrape-config/scrape.yml"
+    persistence:
+      enabled: true
+      size: 50Gi
+      mountPath: /victoria-metrics-data
+      storageClass: local-path
+    volumeMounts:
+      - name: scrape-config
+        mountPath: /etc/vm-scrape-config
+    volumes:
+      - name: scrape-config
+        configMap:
+          name: victoriametrics-scrape-config
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - ubuntu
+    ingress:
+      enabled: true
+      host: metrics.homedev
+    scrapeConfig:
+      global:
+        scrape_interval: 15s
+      scrape_configs:
+        - job_name: 'victoriametrics'
+          static_configs:
+            - targets: ['localhost:8428']
+        - job_name: 'node-exporter'
+          kubernetes_sd_configs:
+            - role: node
+          relabel_configs:
+            - source_labels: [__address__]
+              regex: '([^:]+)(?::\d+)?'
+              replacement: '$1:9100'
+              target_label: __address__
+            - source_labels: [__meta_kubernetes_node_name]
+              target_label: node
+
+# Metrics Server (for kubectl top and k9s CPU/MEM stats)
+metrics-server:
+  enabled: true
+  args:
+    - --kubelet-insecure-tls
+    - --kubelet-preferred-address-types=InternalIP
 
 # Cert-manager (for TLS certificates from Let's Encrypt)
 cert-manager:

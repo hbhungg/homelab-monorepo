@@ -27,6 +27,12 @@ spec:
       containers:
         - name: {{ $key }}
           image: "{{ $app.image.repository }}:{{ $app.image.tag }}"
+{{- if $app.args }}
+          args:
+{{- range $app.args }}
+            - {{ . | quote }}
+{{- end }}
+{{- end }}
 {{- if $app.resources }}
           resources:
 {{ toYaml $app.resources | indent 12 }}

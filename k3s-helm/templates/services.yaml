@@ -10,6 +10,8 @@ metadata:
 spec:
 {{- if $app.stateful }}
   clusterIP: None
+{{- else if $app.service }}
+  type: {{ $app.service.type | default "ClusterIP" }}
 {{- else }}
   type: ClusterIP
 {{- end }}
@@ -19,6 +21,9 @@ spec:
       targetPort: {{ .containerPort }}
       protocol: {{ .protocol | default "TCP" }}
       name: {{ .name }}
+{{- if and $app.service (eq $app.service.type "NodePort") $app.service.nodePort }}
+      nodePort: {{ $app.service.nodePort }}
+{{- end }}
 {{- end }}
   selector:
     app.kubernetes.io/name: {{ $key }}

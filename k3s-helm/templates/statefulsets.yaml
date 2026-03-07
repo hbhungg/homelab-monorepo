@@ -25,6 +25,12 @@ spec:
       containers:
         - name: {{ $key }}
           image: "{{ $app.image.repository }}:{{ $app.image.tag }}"
+{{- if $app.args }}
+          args:
+{{- range $app.args }}
+            - {{ . | quote }}
+{{- end }}
+{{- end }}
 {{- if $app.ports }}
           ports:
 {{- range $app.ports }}
@@ -51,11 +57,32 @@ spec:
                 name: {{ .secretRef.name }}
 {{- end }}
 {{- end }}
-{{- if $app.persistence }}
-{{- if $app.persistence.enabled }}
+{{- if or $app.volumeMounts $app.persistence }}
           volumeMounts:
+{{- if $app.volumeMounts }}
+{{- range $app.volumeMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+{{- if .readOnly }}
+              readOnly: {{ .readOnly }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if and $app.persistence $app.persistence.enabled }}
             - name: data
               mountPath: {{ $app.persistence.mountPath }}
+{{- end }}
+{{- end }}
+{{- if $app.volumes }}
+      volumes:
+{{- range $app.volumes }}
+        - name: {{ .name }}
+{{- if .configMap }}
+          configMap:
+            name: {{ .configMap.name }}
+{{- else if .emptyDir }}
+          emptyDir: {}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- if $app.persistence }}
