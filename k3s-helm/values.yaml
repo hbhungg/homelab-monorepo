@@ -254,6 +254,8 @@ apps:
         value: "30000"
       - name: WG_DEFAULT_DNS
         value: 192.168.0.201
+      - name: WG_MTU
+        value: "1280"
     securityContext:
       capabilities:
         add:
