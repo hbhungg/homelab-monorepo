@@ -1,29 +1,18 @@
 {
-  "name": "mfw-monorepo",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "homelab",
+  "version": "0.0.1",
+  "homepage": "https://github.com/stevedylandev/bhvr",
+  "packageManager": "bun@1.2.4",
+  "workspaces": [],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "format": "biome format . --write"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.18.0",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
-    "typescript-eslint": "^8.20.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.22",
-    "globals": "^16.4.0"
+    "@biomejs/biome": "^2.3.15",
+    "bun-types": "latest",
+    "turbo": "^2.6.3"
   },
-  "pnpm": {
-    "overrides": {
-      "vite": "npm:rolldown-vite@7.1.14"
-    }
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.19.0"
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  }
 }
