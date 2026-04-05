@@ -17,11 +17,13 @@ spec:
 {{- end }}
   ports:
 {{- range $app.ports }}
-    - port: {{ .containerPort }}
+    - port: {{ .servicePort | default .containerPort }}
       targetPort: {{ .containerPort }}
       protocol: {{ .protocol | default "TCP" }}
       name: {{ .name }}
-{{- if and $app.service (eq $app.service.type "NodePort") $app.service.nodePort }}
+{{- if and $app.service (eq $app.service.type "NodePort") .nodePort }}
+      nodePort: {{ .nodePort }}
+{{- else if and $app.service (eq $app.service.type "NodePort") $app.service.nodePort }}
       nodePort: {{ $app.service.nodePort }}
 {{- end }}
 {{- end }}

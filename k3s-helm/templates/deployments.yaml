@@ -17,6 +17,10 @@ spec:
       labels:
         app.kubernetes.io/name: {{ $key }}
     spec:
+{{- if $app.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+{{- end }}
 {{- if $app.serviceAccountName }}
       serviceAccountName: {{ $app.serviceAccountName }}
 {{- end }}
@@ -58,6 +62,10 @@ spec:
             - secretRef:
                 name: {{ .secretRef.name }}
 {{- end }}
+{{- end }}
+{{- if $app.securityContext }}
+          securityContext:
+{{ toYaml $app.securityContext | indent 12 }}
 {{- end }}
 {{- if or $app.volumeMounts $app.persistence }}
           volumeMounts:

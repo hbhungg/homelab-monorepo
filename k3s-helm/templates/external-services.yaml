@@ -14,18 +14,21 @@ spec:
       protocol: {{ .protocol | default "TCP" }}
 {{- end }}
 ---
-apiVersion: v1
-kind: Endpoints
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
 metadata:
   name: {{ $key }}
   namespace: {{ $svc.namespace | default "default" }}
-subsets:
-  - addresses:
-      - ip: {{ $svc.externalIP }}
-    ports:
+  labels:
+    kubernetes.io/service-name: {{ $key }}
+addressType: IPv4
+ports:
 {{- range $svc.ports }}
-      - port: {{ .port }}
-        protocol: {{ .protocol | default "TCP" }}
+  - port: {{ .port }}
+    protocol: {{ .protocol | default "TCP" }}
 {{- end }}
+endpoints:
+  - addresses:
+      - {{ $svc.externalIP }}
 {{- end }}
 {{- end }}

@@ -172,7 +172,7 @@ apps:
     image:
       repository: coredns/coredns
       tag: "1.11.1"
-    replicas: 2
+    replicas: 1
     ports:
       - name: dns
         containerPort: 53
@@ -181,8 +181,17 @@ apps:
         containerPort: 53
         protocol: TCP
     service:
-      type: NodePort
-      nodePort: 30053
+      type: ClusterIP
+    hostNetwork: true
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - ubuntu
     args:
       - "-conf"
       - "/etc/coredns/Corefile"
@@ -204,9 +213,9 @@ apps:
             }
             ready
             
-            # Handle *.homedev domains - IP dynamically looked up from traefik service
-            template IN A homedev {
-                match \.homedev\.$
+            # Handle *.home domains - IP dynamically looked up from traefik service
+            template IN A home {
+                match \.home\.$
                 answer "{{ .Name }} 60 IN A {{TRAEFIK_IP}}"
                 fallthrough
             }
@@ -221,6 +230,53 @@ apps:
             reload
             loadbalance
         }
+
+  wg-easy:
+    enabled: true
+    image:
+      repository: ghcr.io/wg-easy/wg-easy
+      tag: latest
+    replicas: 1
+    ports:
+      - name: wg
+        containerPort: 30000
+        servicePort: 30000
+        nodePort: 30000
+        protocol: UDP
+      - name: http
+        containerPort: 51821
+        servicePort: 51821
+        protocol: TCP
+    env:
+      - name: WG_HOST
+        value: vpn.mfw.ddns.net
+      - name: WG_PORT
+        value: "30000"
+      - name: WG_DEFAULT_DNS
+        value: 192.168.0.201
+    securityContext:
+      capabilities:
+        add:
+          - NET_ADMIN
+          - SYS_MODULE
+    persistence:
+      enabled: true
+      size: 256Mi
+      mountPath: /etc/wireguard
+    service:
+      type: NodePort
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - ubuntu
+    ingress:
+      enabled: true
+      host: wg.home
 
 # Metrics Server (for kubectl top and k9s CPU/MEM stats)
 metrics-server:
@@ -270,7 +326,7 @@ victoria-metrics-k8s-stack:
     ingress:
       enabled: true
       hosts:
-        - metrics.homedev
+        - metrics.home
   
   prometheus-node-exporter:
     tolerations:
