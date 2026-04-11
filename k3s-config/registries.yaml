@@ -1,0 +1,15 @@
+# K3s Registry Configuration
+# This file should be copied to /etc/rancher/k3s/registries.yaml on all nodes
+# After copying, restart k3s service:
+#   - Control plane: sudo systemctl restart k3s
+#   - Worker nodes: sudo systemctl restart k3s-agent
+
+mirrors: 
+  registry.home:
+    endpoint:
+      - "http://registry.home"
+
+configs:
+  registry.home:
+    tls:
+      insecure_skip_verify: true

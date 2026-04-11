@@ -33,13 +33,17 @@ apps:
   mfw:
     enabled: true
     image:
-      repository: registry.home/mfw-srv
+      repository: registry.home/mfw
       tag: latest
+      imagePullPolicy: Always
     replicas: 1
     ports:
       - name: http
         containerPort: 3000
         protocol: TCP
+    env:
+      - name: PORT
+        value: "3000"
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -65,6 +69,7 @@ apps:
 
   registry:
     enabled: true
+    stateful: true
     image:
       repository: registry
       tag: "2"

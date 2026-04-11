@@ -12,7 +12,7 @@ RUN cd /temp/prod && bun install --frozen-lockfile --production
 
 FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
-COPY index.ts .
+COPY serve.ts .
 COPY static static
 
 FROM base AS release
@@ -20,5 +20,4 @@ COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app .
 
 USER bun
-EXPOSE 9998/tcp
 ENTRYPOINT [ "bun", "serve" ]

@@ -1,8 +1,6 @@
 import index from "./static/index.html";
 
 const server = Bun.serve({
-  port: 9998,
-  // hostname: "mfw.ddns.net",
   routes: {
     "/": index,
     "/favicon.ico": Bun.file("./static/favicon.ico"),

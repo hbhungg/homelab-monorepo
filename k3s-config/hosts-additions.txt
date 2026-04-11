@@ -1,0 +1,5 @@
+# K3s /etc/hosts additions
+# Add these lines to /etc/hosts on all k3s nodes
+# This allows containerd to resolve registry.home for image pulls
+
+192.168.0.201 registry.home
