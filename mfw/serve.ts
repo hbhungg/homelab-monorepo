@@ -1,6 +1,7 @@
 import index from "./static/index.html";
 
 const server = Bun.serve({
+  hostname: "0.0.0.0",
   routes: {
     "/": index,
     "/favicon.ico": Bun.file("./static/favicon.ico"),
@@ -12,3 +13,4 @@ const server = Bun.serve({
 });
 
 console.log(`Server running at ${server.url}`);
+
