@@ -30,5 +30,9 @@ ports:
 endpoints:
   - addresses:
       - {{ $svc.externalIP }}
+    conditions:
+      ready: true
+      serving: true
+      terminating: false
 {{- end }}
 {{- end }}
