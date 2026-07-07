@@ -117,13 +117,9 @@ apps:
       - name: postgres
         containerPort: 5432
         protocol: TCP
-    env:
-      - name: POSTGRES_PASSWORD
-        value: changeme
-      - name: POSTGRES_DB
-        value: homelab
-      - name: POSTGRES_USER
-        value: postgres
+    envFrom:
+      - secretRef:
+          name: postgres-secret
     persistence:
       enabled: true
       size: 20Gi
@@ -272,6 +268,74 @@ apps:
       mountPath: /etc/wireguard
     service:
       type: NodePort
+    ingress:
+      enabled: true
+      host: wg.home
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                    - ubuntu
+    
+  
+  paperless-ngx:
+    enabled: true
+    stateful: true
+    image:
+      repository: ghcr.io/paperless-ngx/paperless-ngx
+      tag: latest
+    replicas: 1
+    ports:
+      - name: http
+        containerPort: 8000
+        protocol: TCP
+    env:
+      - name: PAPERLESS_REDIS
+        value: redis://redis:6379
+      - name: PAPERLESS_DBHOST
+        value: postgres
+      - name: PAPERLESS_DBNAME
+        value: paperless
+      - name: PAPERLESS_DBUSER
+        value: postgres
+      - name: PAPERLESS_DBPORT
+        value: "5432"
+      - name: PAPERLESS_URL
+        value: https://paperless.home
+      - name: PAPERLESS_TIME_ZONE
+        value: America/Los_Angeles
+      - name: PAPERLESS_OCR_LANGUAGE
+        value: eng
+      - name: PAPERLESS_AUTO_LOGIN_USERNAME
+        value: admin
+      - name: PAPERLESS_ADMIN_USER
+        value: admin
+      - name: PAPERLESS_ADMIN_PASSWORD
+        value: admin
+    envFrom:
+      - secretRef:
+          name: postgres-secret
+      - secretRef:
+          name: paperless-secret
+    persistence:
+      enabled: true
+      size: 50Gi
+      mountPath: /usr/src/paperless/data
+      storageClass: local-path
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+    ingress:
+      enabled: true
+      host: paperless.home
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -283,7 +347,8 @@ apps:
                     - ubuntu
     ingress:
       enabled: true
-      host: wg.home
+      host: paperless.home
+
 
 # Metrics Server (for kubectl top and k9s CPU/MEM stats)
 metrics-server:
