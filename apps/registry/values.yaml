@@ -1,6 +1,3 @@
-# Docker container registry.
-# Deployed via the generic charts/homelab renderer (like apps/), but lives
-# under infra/ because other apps (e.g. mfw) pull images from it.
 enabled: true
 stateful: true
 image:

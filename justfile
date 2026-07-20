@@ -66,7 +66,6 @@ _deploy-infra-core:
     helm upgrade --install cert-manager      infra/cert-manager       -f infra/cert-manager/values.yaml
     helm upgrade --install external-services infra/external-services -f infra/external-services/values.yaml
     helm upgrade --install monitoring        infra/monitoring        -f infra/monitoring/values.yaml
-    helm upgrade --install registry          {{app-chart}}           -f infra/registry/values.yaml
 
 # (private) Deploy one app release from charts/homelab.
 _deploy-app name:
