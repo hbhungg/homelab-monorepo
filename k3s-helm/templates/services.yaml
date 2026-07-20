@@ -1,5 +1,7 @@
 {{- range $key, $app := .Values.apps }}
 {{- if and $app.enabled $app.ports }}
+{{- $svc := $app.service | default dict }}
+{{- $svcType := $svc.type | default "ClusterIP" }}
 ---
 apiVersion: v1
 kind: Service
@@ -10,10 +12,8 @@ metadata:
 spec:
 {{- if $app.stateful }}
   clusterIP: None
-{{- else if $app.service }}
-  type: {{ $app.service.type | default "ClusterIP" }}
 {{- else }}
-  type: ClusterIP
+  type: {{ $svcType }}
 {{- end }}
   ports:
 {{- range $app.ports }}
@@ -21,10 +21,8 @@ spec:
       targetPort: {{ .containerPort }}
       protocol: {{ .protocol | default "TCP" }}
       name: {{ .name }}
-{{- if and $app.service (eq $app.service.type "NodePort") .nodePort }}
-      nodePort: {{ .nodePort }}
-{{- else if and $app.service (eq $app.service.type "NodePort") $app.service.nodePort }}
-      nodePort: {{ $app.service.nodePort }}
+{{- if and (eq $svcType "NodePort") (or .nodePort $svc.nodePort) }}
+      nodePort: {{ .nodePort | default $svc.nodePort }}
 {{- end }}
 {{- end }}
   selector:

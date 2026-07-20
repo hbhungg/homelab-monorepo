@@ -28,7 +28,8 @@ apps:
         value: homepage.home
     ingress:
       enabled: true
-      host: homepage.home
+      hosts:
+        - homepage.home
 
   mfw:
     enabled: true
@@ -94,7 +95,8 @@ apps:
                     - ubuntu
     ingress:
       enabled: true
-      host: registry.home
+      hosts:
+        - registry.home
 
   noip:
     enabled: true
@@ -205,7 +207,10 @@ apps:
           name: external-dns
     configMap:
       # CoreDNS Corefile configuration
-      # The {{TRAEFIK_IP}} placeholder will be replaced with the actual Traefik IP during deployment
+      # The {{TRAEFIK_IP}} placeholder is replaced with the live Traefik LB IP at deploy time.
+      # Set traefikIPFallback to render offline (`helm template`) or on a first install,
+      # when the lookup can't resolve an IP yet:
+      # traefikIPFallback: 192.168.0.x
       corefile: |
         .:53 {
             errors
@@ -270,7 +275,8 @@ apps:
       type: NodePort
     ingress:
       enabled: true
-      host: wg.home
+      hosts:
+        - wg.home
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -335,7 +341,8 @@ apps:
         cpu: 1000m
     ingress:
       enabled: true
-      host: paperless.home
+      hosts:
+        - paperless.home
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
@@ -345,9 +352,6 @@ apps:
                   operator: In
                   values:
                     - ubuntu
-    ingress:
-      enabled: true
-      host: paperless.home
 
 
 # Metrics Server (for kubectl top and k9s CPU/MEM stats)

@@ -1,5 +1,13 @@
 {{- range $key, $app := .Values.apps }}
 {{- if and $app.enabled $app.ingress $app.ingress.enabled }}
+{{- $portName := $app.ingress.portName | default "http" }}
+{{- $found := false }}
+{{- range $app.ports }}
+{{- if eq .name $portName }}{{- $found = true }}{{- end }}
+{{- end }}
+{{- if not $found }}
+{{- fail (printf "%s: ingress targets container port named %q, but the app defines no such port" $key $portName) }}
+{{- end }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -7,26 +15,13 @@ metadata:
   name: {{ $key }}
 {{- if $app.ingress.tls }}
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    cert-manager.io/cluster-issuer: {{ $.Values.certManager.clusterIssuer.name }}
 {{- end }}
 spec:
   ingressClassName: traefik
   rules:
-{{- if $app.ingress.hosts }}
 {{- range $app.ingress.hosts }}
     - host: {{ . }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $key }}
-                port:
-                  name: http
-{{- end }}
-{{- else }}
-    - host: {{ $app.ingress.host }}
       http:
         paths:
           - path: {{ $app.ingress.path | default "/" }}
@@ -35,7 +30,7 @@ spec:
               service:
                 name: {{ $key }}
                 port:
-                  name: http
+                  name: {{ $portName }}
 {{- end }}
 {{- if $app.ingress.tls }}
   tls:
