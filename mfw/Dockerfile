@@ -1,24 +1,20 @@
 FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
-# Stage 1: Install production dependencies
-FROM base AS install
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
-
-# Stage 2: Bundle everything into a single file
-FROM base AS prerelease
-COPY --from=install /usr/src/app/node_modules node_modules
+# Stage 1: Bundle serve.ts → a single serve.js (precompiled, no runtime transpile).
+# Override the .html loader to "text" so index.html is inlined as a string
+# (matching `import index from "./static/index.html"`), instead of being
+# treated as an HTML entrypoint whose asset output collides with serve.js.
+FROM base AS bundle
 COPY serve.ts .
-# This compiles serve.ts and its dependencies into a single output file
-RUN bun build ./serve.ts --outfile=serve.js --target=bun
+COPY static static
+RUN bun build ./serve.ts --outfile=serve.js --target=bun --loader .html:text
 
-# Stage 3: The absolute smallest runtime footprint
+# Stage 2: Minimal runtime. serve.js has index.html inlined; static/ ships
+# only for the runtime Bun.file("./static/favicon.ico") read.
 FROM oven/bun:distroless AS release
 WORKDIR /usr/src/app
-
-# Notice: We do NOT copy node_modules here anymore!
-COPY --from=prerelease /usr/src/app/serve.js .
+COPY --from=bundle /usr/src/app/serve.js .
 COPY static static
 
 USER nonroot

@@ -13,8 +13,8 @@ external-secrets:
 # so the CRDs exist before these resources reference them, then deploy again normally.
 externalSecrets:
   enabled: true
-  organizationID: ""  # required: Bitwarden organization UUID
-  projectID: ""       # required: Secrets Manager project UUID
+  organizationID: "70c993b7-cc66-4bc1-b0a6-b48d0042c2c2"  # Bitwarden organization UUID
+  projectID: "38fb7833-4908-4ea0-b2b0-b48d004334d0"       # Secrets Manager project UUID
   apiURL: https://api.bitwarden.com
   identityURL: https://identity.bitwarden.com
   refreshInterval: 1h
