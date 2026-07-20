@@ -1,0 +1,79 @@
+# Metrics Server (for kubectl top and k9s CPU/MEM stats)
+metrics-server:
+  enabled: true
+  args:
+    - --kubelet-insecure-tls
+    - --kubelet-preferred-address-types=InternalIP
+
+# Monitoring
+victoria-metrics-k8s-stack:
+  enabled: true
+
+  # Disable
+  kubeControllerManager:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeProxy:
+    enabled: false
+
+  # Required for k3s: Allow scraping self-signed kubelet & cAdvisor certs
+  kubelet:
+    enabled: true
+    serviceMonitor:
+      kubelet:
+        insecureSkipVerify: true
+      cAdvisor:
+        insecureSkipVerify: true
+      probes:
+        insecureSkipVerify: true
+
+  # Disable alert
+  alertmanager:
+    enabled: false
+  vmalert:
+    enabled: false
+
+  # Grafana
+  grafana:
+    enabled: true
+    grafana.ini:
+      auth.anonymous:
+        enabled: true
+        org_role: Admin
+    ingress:
+      enabled: true
+      hosts:
+        - metrics.home
+
+  prometheus-node-exporter:
+    tolerations:
+      - effect: NoSchedule
+        key: ephemeral
+        operator: Equal
+        value: "true"
+
+  vmsingle:
+    enabled: true
+    spec:
+      retentionPeriod: "14d"
+      # Persist data using your local-path storage class
+      storage:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+        storageClassName: local-path
+      # Place the database on your ubuntu node
+      nodeSelector:
+        kubernetes.io/hostname: ubuntu
+      resources:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 2Gi
+          cpu: 1000m

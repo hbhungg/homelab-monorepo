@@ -1,4 +1,4 @@
-{{- range $key, $app := .Values.apps }}
+{{- $app := .Values -}}
 {{- if and $app.enabled $app.ports }}
 {{- $svc := $app.service | default dict }}
 {{- $svcType := $svc.type | default "ClusterIP" }}
@@ -6,9 +6,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $key }}
+  name: {{ .Release.Name }}
   labels:
-    app.kubernetes.io/name: {{ $key }}
+    app.kubernetes.io/name: {{ .Release.Name }}
 spec:
 {{- if $app.stateful }}
   clusterIP: None
@@ -26,6 +26,5 @@ spec:
 {{- end }}
 {{- end }}
   selector:
-    app.kubernetes.io/name: {{ $key }}
-{{- end }}
+    app.kubernetes.io/name: {{ .Release.Name }}
 {{- end }}

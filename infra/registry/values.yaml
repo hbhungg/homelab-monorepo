@@ -1,0 +1,31 @@
+# Docker container registry.
+# Deployed via the generic charts/homelab renderer (like apps/), but lives
+# under infra/ because other apps (e.g. mfw) pull images from it.
+enabled: true
+stateful: true
+image:
+  repository: registry
+  tag: "2"
+replicas: 1
+ports:
+  - name: http
+    containerPort: 5000
+    protocol: TCP
+persistence:
+  enabled: true
+  size: 100Gi
+  mountPath: /var/lib/registry
+  storageClass: local-path
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - ubuntu
+ingress:
+  enabled: true
+  hosts:
+    - registry.home

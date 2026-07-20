@@ -1,0 +1,8 @@
+enabled: true
+image:
+  repository: ghcr.io/noipcom/noip-duc
+  tag: latest
+replicas: 1
+envFrom:
+  - secretRef:
+      name: noip-secret

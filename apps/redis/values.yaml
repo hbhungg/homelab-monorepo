@@ -1,0 +1,24 @@
+enabled: true
+stateful: true
+image:
+  repository: redis
+  tag: 7-alpine
+replicas: 1
+ports:
+  - name: redis
+    containerPort: 6379
+    protocol: TCP
+persistence:
+  enabled: true
+  size: 8Gi
+  mountPath: /data
+  storageClass: local-path
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - ubuntu

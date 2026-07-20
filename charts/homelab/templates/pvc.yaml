@@ -1,12 +1,12 @@
-{{- range $key, $app := .Values.apps }}
+{{- $app := .Values -}}
 {{- if and $app.enabled $app.persistence $app.persistence.enabled (not $app.stateful) }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ $key }}-data
+  name: {{ .Release.Name }}-data
   labels:
-    app.kubernetes.io/name: {{ $key }}
+    app.kubernetes.io/name: {{ .Release.Name }}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -14,5 +14,4 @@ spec:
   resources:
     requests:
       storage: {{ $app.persistence.size }}
-{{- end }}
 {{- end }}

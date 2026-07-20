@@ -1,0 +1,11 @@
+apiVersion: v2
+name: homelab-external-secrets
+description: External Secrets Operator + Bitwarden Secrets Manager sync
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: external-secrets
+    version: 2.8.0
+    repository: https://charts.external-secrets.io
+    condition: external-secrets.enabled

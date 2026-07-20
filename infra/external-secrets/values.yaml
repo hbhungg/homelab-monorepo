@@ -1,0 +1,34 @@
+# External Secrets Operator (upstream subchart) — syncs k8s Secrets from
+# Bitwarden Secrets Manager. The bitwarden-sdk-server subchart is ESO's
+# required HTTPS bridge to the Bitwarden SDK; its certs come from
+# templates/bitwarden-sdk-certs.yaml.
+external-secrets:
+  enabled: true
+  bitwarden-sdk-server:
+    enabled: true
+
+# What ESO should sync. One-time bootstrap (the only secret not managed here):
+#   kubectl create secret generic bitwarden-access-token --from-literal=token='<machine account access token>'
+# NOTE first install of ESO itself: deploy once with --set externalSecrets.enabled=false
+# so the CRDs exist before these resources reference them, then deploy again normally.
+externalSecrets:
+  enabled: true
+  organizationID: ""  # required: Bitwarden organization UUID
+  projectID: ""       # required: Secrets Manager project UUID
+  apiURL: https://api.bitwarden.com
+  identityURL: https://identity.bitwarden.com
+  refreshInterval: 1h
+  tokenSecretName: bitwarden-access-token
+  # <k8s Secret name>: { <key in the k8s Secret>: <secret name in Bitwarden> }
+  secrets:
+    noip-secret:
+      NOIP_USERNAME: NOIP_USERNAME
+      NOIP_PASSWORD: NOIP_PASSWORD
+      NOIP_HOSTNAMES: NOIP_HOSTNAMES
+    postgres-secret:
+      POSTGRES_USER: POSTGRES_USER
+      POSTGRES_PASSWORD: POSTGRES_PASSWORD
+      POSTGRES_DB: POSTGRES_DB
+    paperless-secret:
+      PAPERLESS_SECRET_KEY: PAPERLESS_SECRET_KEY
+      PAPERLESS_DBPASS: POSTGRES_PASSWORD

@@ -1,0 +1,14 @@
+# cert-manager operator (upstream subchart)
+cert-manager:
+  enabled: true
+  installCRDs: true
+  namespace: cert-manager
+  fullnameOverride: cert-manager
+
+# ClusterIssuer configuration (rendered by this chart's templates/)
+certManager:
+  clusterIssuer:
+    enabled: true
+    name: letsencrypt-prod
+    email: hung.ba.huynh@proton.me
+    server: https://acme-v02.api.letsencrypt.org/directory

@@ -1,0 +1,34 @@
+enabled: true
+stateful: true
+image:
+  repository: postgres
+  tag: 17-alpine
+replicas: 1
+ports:
+  - name: postgres
+    containerPort: 5432
+    protocol: TCP
+envFrom:
+  - secretRef:
+      name: postgres-secret
+persistence:
+  enabled: true
+  size: 20Gi
+  mountPath: /var/lib/postgresql/data
+  storageClass: local-path
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 250m
+  limits:
+    memory: 512Mi
+    cpu: 500m
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - ubuntu

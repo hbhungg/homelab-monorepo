@@ -1,4 +1,4 @@
-{{- range $key, $app := .Values.apps }}
+{{- $app := .Values -}}
 {{- if and $app.enabled $app.configMap $app.configMap.corefile }}
 {{- /*
 The {{TRAEFIK_IP}} placeholder in the Corefile is resolved from the live
@@ -14,15 +14,14 @@ those cases; failing beats silently deploying a broken Corefile.
 {{- end }}
 {{- end }}
 {{- if not $ingressIP }}
-{{- fail (printf "%s: cannot resolve Traefik ingress IP — lookup found nothing and configMap.traefikIPFallback is unset" $key) }}
+{{- fail (printf "%s: cannot resolve Traefik ingress IP — lookup found nothing and configMap.traefikIPFallback is unset" .Release.Name) }}
 {{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $key }}
+  name: {{ .Release.Name }}
 data:
   Corefile: |
 {{ $app.configMap.corefile | replace "{{TRAEFIK_IP}}" $ingressIP | indent 4 }}
-{{- end }}
 {{- end }}

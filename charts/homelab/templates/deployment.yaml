@@ -1,23 +1,22 @@
-{{- range $key, $app := .Values.apps }}
+{{- $app := .Values -}}
 {{- if and $app.enabled (not $app.stateful) }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $key }}
+  name: {{ .Release.Name }}
   labels:
-    app.kubernetes.io/name: {{ $key }}
+    app.kubernetes.io/name: {{ .Release.Name }}
 spec:
   replicas: {{ $app.replicas | default 1 }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ $key }}
+      app.kubernetes.io/name: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ $key }}
+        app.kubernetes.io/name: {{ .Release.Name }}
       {{- include "homelab.podAnnotations" (dict "app" $app) | nindent 6 }}
     spec:
-      {{- include "homelab.podSpec" (dict "key" $key "app" $app) | nindent 6 }}
-{{- end }}
+      {{- include "homelab.podSpec" (dict "key" .Release.Name "app" $app) | nindent 6 }}
 {{- end }}

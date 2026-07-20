@@ -1,4 +1,4 @@
-{{- range $key, $app := .Values.apps }}
+{{- $app := .Values -}}
 {{- if and $app.enabled $app.ingress $app.ingress.enabled }}
 {{- $portName := $app.ingress.portName | default "http" }}
 {{- $found := false }}
@@ -6,13 +6,13 @@
 {{- if eq .name $portName }}{{- $found = true }}{{- end }}
 {{- end }}
 {{- if not $found }}
-{{- fail (printf "%s: ingress targets container port named %q, but the app defines no such port" $key $portName) }}
+{{- fail (printf "%s: ingress targets container port named %q, but the app defines no such port" .Release.Name $portName) }}
 {{- end }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $key }}
+  name: {{ .Release.Name }}
 {{- if $app.ingress.tls }}
   annotations:
     cert-manager.io/cluster-issuer: {{ $.Values.certManager.clusterIssuer.name }}
@@ -28,7 +28,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ $key }}
+                name: {{ $.Release.Name }}
                 port:
                   name: {{ $portName }}
 {{- end }}
@@ -38,30 +38,6 @@ spec:
 {{- range $app.ingress.tls }}
         - {{ . }}
 {{- end }}
-      secretName: {{ $key }}-tls
-{{- end }}
-{{- end }}
-{{- end }}
-{{- range $key, $svc := .Values.externalServices }}
-{{- if and $svc.enabled $svc.ingress $svc.ingress.enabled }}
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: {{ $key }}
-  namespace: {{ $svc.namespace | default "default" }}
-spec:
-  ingressClassName: traefik
-  rules:
-    - host: {{ $svc.ingress.host }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ $key }}
-                port:
-                  number: {{ (index $svc.ports 0).port }}
+      secretName: {{ $.Release.Name }}-tls
 {{- end }}
 {{- end }}
