@@ -1,9 +1,33 @@
 We are here: https://mfw.ddns.net
 
-# 1. Pull secrets from Bitwarden
-python pull_secrets.py
-# 2. Deploy with secrets
-helm upgrade --install homelab ./k3s-helm -f ./k3s-helm/values-secrets.yaml
+# Deploy
+
+```bash
+helm dependency build ./k3s-helm
+helm upgrade --install homelab ./k3s-helm
+```
+
+## Secrets
+
+Secrets live in Bitwarden Secrets Manager and are synced into the cluster by
+External Secrets Operator (see `externalSecrets:` in `k3s-helm/values.yaml`).
+One-time bootstrap on a fresh cluster — put the machine-account token in place:
+
+```bash
+kubectl create secret generic bitwarden-access-token \
+  --from-literal=token='<machine account access token>'
+```
+
+On the very first deploy (before the ESO CRDs exist), install in two passes:
+
+```bash
+helm upgrade --install homelab ./k3s-helm --set externalSecrets.enabled=false
+helm upgrade --install homelab ./k3s-helm
+```
+
+Note: rotating a secret in Bitwarden updates the k8s Secret within
+`refreshInterval`, but pods only read env vars at startup — run
+`kubectl rollout restart deploy/<app>` (or statefulset) to pick up changes.
 
 
 # Local Services (*.home domains)
