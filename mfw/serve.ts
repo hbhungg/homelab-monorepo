@@ -3,7 +3,7 @@ import index from "./static/index.html";
 const server = Bun.serve({
   hostname: "0.0.0.0",
   routes: {
-    "/": new Response(index),
+    "/": index,
     "/favicon.ico": Bun.file("./static/favicon.ico"),
     // "/api/status": new Response("OK"),
   },
