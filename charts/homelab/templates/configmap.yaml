@@ -1,0 +1,27 @@
+{{- $app := .Values -}}
+{{- if and $app.enabled $app.configMap $app.configMap.corefile }}
+{{- /*
+The {{TRAEFIK_IP}} placeholder in the Corefile is resolved from the live
+traefik service. `lookup` returns nothing on `helm template` or a first
+install (before traefik has an IP) — set configMap.traefikIPFallback for
+those cases; failing beats silently deploying a broken Corefile.
+*/}}
+{{- $ingressIP := $app.configMap.traefikIPFallback | default "" }}
+{{- $traefikSvc := lookup "v1" "Service" "kube-system" "traefik" }}
+{{- if $traefikSvc }}
+{{- if $traefikSvc.status.loadBalancer.ingress }}
+{{- $ingressIP = (index $traefikSvc.status.loadBalancer.ingress 0).ip }}
+{{- end }}
+{{- end }}
+{{- if not $ingressIP }}
+{{- fail (printf "%s: cannot resolve Traefik ingress IP — lookup found nothing and configMap.traefikIPFallback is unset" .Release.Name) }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}
+data:
+  Corefile: |
+{{ $app.configMap.corefile | replace "{{TRAEFIK_IP}}" $ingressIP | indent 4 }}
+{{- end }}

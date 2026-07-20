@@ -1,9 +1,41 @@
 We are here: https://mfw.ddns.net
 
-# 1. Pull secrets from Bitwarden
-python pull_secrets.py
-# 2. Deploy with secrets
-helm upgrade --install homelab ./k3s-helm -f ./k3s-helm/values-secrets.yaml
+# Deploy
+
+The repo is split into **infra/** (cluster plumbing) and **apps/** (your
+workloads). Every app is a separate Helm release of the generic chart in
+`charts/homelab/`, so you can upgrade one without touching the others.
+
+```bash
+just deploy                # deploy everything
+just deploy-infra          # just infrastructure
+just deploy-apps           # all apps
+just deploy-app postgres   # one app
+```
+
+First-time bootstrap (ESO CRDs must exist before `externalSecrets` resources):
+
+```bash
+just bootstrap
+```
+
+## Secrets
+
+Secrets live in Bitwarden Secrets Manager and are synced into the cluster by
+External Secrets Operator (see `externalSecrets:` in
+`infra/external-secrets/values.yaml`).
+One-time bootstrap on a fresh cluster — put the machine-account token in place:
+
+```bash
+kubectl create secret generic bitwarden-access-token \
+  --from-literal=token='<machine account access token>'
+```
+
+Then run `just bootstrap` (see above).
+
+Note: rotating a secret in Bitwarden updates the k8s Secret within
+`refreshInterval`, but pods only read env vars at startup — run
+`kubectl rollout restart deploy/<app>` (or statefulset) to pick up changes.
 
 
 # Local Services (*.home domains)

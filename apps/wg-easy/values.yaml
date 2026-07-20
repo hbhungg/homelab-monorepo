@@ -1,0 +1,48 @@
+enabled: true
+image:
+  repository: ghcr.io/wg-easy/wg-easy
+  tag: latest
+replicas: 1
+ports:
+  - name: wg
+    containerPort: 30000
+    servicePort: 30000
+    nodePort: 30000
+    protocol: UDP
+  - name: http
+    containerPort: 51821
+    servicePort: 51821
+    protocol: TCP
+env:
+  - name: WG_HOST
+    value: vpn.mfw.ddns.net
+  - name: WG_PORT
+    value: "30000"
+  - name: WG_DEFAULT_DNS
+    value: 192.168.0.201
+  - name: WG_MTU
+    value: "1280"
+securityContext:
+  capabilities:
+    add:
+      - NET_ADMIN
+      - SYS_MODULE
+persistence:
+  enabled: true
+  size: 256Mi
+  mountPath: /etc/wireguard
+service:
+  type: NodePort
+ingress:
+  enabled: true
+  hosts:
+    - wg.home
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - ubuntu

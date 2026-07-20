@@ -1,0 +1,30 @@
+externalServices:
+  k1max:
+    enabled: true
+    namespace: external
+    externalIP: 192.168.0.86
+    ports:
+      - port: 4408
+    ingress:
+      enabled: true
+      host: k1max.home
+
+  snapmaker:
+    enabled: true
+    namespace: external
+    externalIP: 192.168.0.68
+    ports:
+      - port: 80
+    ingress:
+      enabled: true
+      host: snapmaker.home
+
+  router:
+    enabled: true
+    namespace: external
+    externalIP: 192.168.0.1
+    ports:
+      - port: 80
+    ingress:
+      enabled: true
+      host: router.home

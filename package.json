@@ -1,9 +1,10 @@
 {
   "name": "homelab",
   "version": "0.0.1",
-  "homepage": "https://github.com/stevedylandev/bhvr",
   "packageManager": "bun@1.2.4",
-  "workspaces": [],
+  "workspaces": [
+    "mfw"
+  ],
   "scripts": {
     "format": "biome format . --write"
   },

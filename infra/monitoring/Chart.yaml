@@ -1,0 +1,15 @@
+apiVersion: v2
+name: homelab-monitoring
+description: Metrics server + Victoria Metrics / Grafana stack
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: metrics-server
+    version: 3.12.2
+    repository: https://kubernetes-sigs.github.io/metrics-server/
+    condition: metrics-server.enabled
+  - name: victoria-metrics-k8s-stack
+    version: 0.72.4
+    repository: https://victoriametrics.github.io/helm-charts/
+    condition: victoria-metrics-k8s-stack.enabled

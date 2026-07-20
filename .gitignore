@@ -55,9 +55,13 @@ pids
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# Helm dependencies
-k3s-helm/charts/
-k3s-helm/Chart.lock
+# Helm dependencies (downloaded by helm dependency build)
+infra/cert-manager/charts/
+infra/external-secrets/charts/
+infra/monitoring/charts/
+infra/cert-manager/Chart.lock
+infra/external-secrets/Chart.lock
+infra/monitoring/Chart.lock
 
 # Helm secrets (DO NOT COMMIT)
-k3s-helm/values-secrets.yaml
+infra/external-secrets/values-secrets.yaml

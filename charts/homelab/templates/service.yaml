@@ -1,0 +1,30 @@
+{{- $app := .Values -}}
+{{- if and $app.enabled $app.ports }}
+{{- $svc := $app.service | default dict }}
+{{- $svcType := $svc.type | default "ClusterIP" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+spec:
+{{- if $app.stateful }}
+  clusterIP: None
+{{- else }}
+  type: {{ $svcType }}
+{{- end }}
+  ports:
+{{- range $app.ports }}
+    - port: {{ .servicePort | default .containerPort }}
+      targetPort: {{ .containerPort }}
+      protocol: {{ .protocol | default "TCP" }}
+      name: {{ .name }}
+{{- if and (eq $svcType "NodePort") (or .nodePort $svc.nodePort) }}
+      nodePort: {{ .nodePort | default $svc.nodePort }}
+{{- end }}
+{{- end }}
+  selector:
+    app.kubernetes.io/name: {{ .Release.Name }}
+{{- end }}

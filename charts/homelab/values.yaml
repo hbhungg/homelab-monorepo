@@ -1,0 +1,7 @@
+# Defaults applied to every app release. Per-app values files (apps/<name>/values.yaml)
+# override these. The app name is always the Helm release name (.Release.Name).
+
+# Cluster issuer used for TLS ingresses — created by infra/cert-manager.
+certManager:
+  clusterIssuer:
+    name: letsencrypt-prod

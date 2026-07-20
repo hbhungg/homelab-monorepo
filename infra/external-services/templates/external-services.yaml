@@ -1,0 +1,59 @@
+{{- range $key, $svc := .Values.externalServices }}
+{{- if $svc.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $key }}
+  namespace: {{ $svc.namespace | default "default" }}
+spec:
+  ports:
+{{- range $svc.ports }}
+    - port: {{ .port }}
+      targetPort: {{ .targetPort | default .port }}
+      protocol: {{ .protocol | default "TCP" }}
+{{- end }}
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: {{ $key }}
+  namespace: {{ $svc.namespace | default "default" }}
+  labels:
+    kubernetes.io/service-name: {{ $key }}
+addressType: IPv4
+ports:
+{{- range $svc.ports }}
+  - port: {{ .port }}
+    protocol: {{ .protocol | default "TCP" }}
+{{- end }}
+endpoints:
+  - addresses:
+      - {{ $svc.externalIP }}
+    conditions:
+      ready: true
+      serving: true
+      terminating: false
+{{- if and $svc.ingress $svc.ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $key }}
+  namespace: {{ $svc.namespace | default "default" }}
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: {{ $svc.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $key }}
+                port:
+                  number: {{ (index $svc.ports 0).port }}
+{{- end }}
+{{- end }}
+{{- end }}
