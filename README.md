@@ -45,6 +45,7 @@ Note: rotating a secret in Bitwarden updates the k8s Secret within
 - **[homepage.home](http://homepage.home)** - Homepage dashboard (port 3000)
 - **[metrics.home](http://metrics.home)** - Grafana metrics & monitoring dashboard
 - **[registry.home](http://registry.home)** - Docker container registry (port 5000)
+- **[registry-ui.home](http://registry-ui.home)** - Web UI for the registry (browse/delete images)
 - **[wg.home](http://wg.home)** - WireGuard VPN management interface
 
 ## Direct Access (MetalLB LoadBalancer)

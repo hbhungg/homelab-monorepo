@@ -1,0 +1,24 @@
+# Web UI for the Docker registry (registry.home).
+# Proxies /v2 to the registry in-cluster, so no CORS config needed.
+enabled: true
+image:
+  repository: joxit/docker-registry-ui
+  tag: "2"
+replicas: 1
+ports:
+  - name: http
+    containerPort: 80
+    protocol: TCP
+env:
+  - name: SINGLE_REGISTRY
+    value: "true"
+  - name: NGINX_PROXY_PASS_URL
+    value: http://registry:5000
+  - name: DELETE_IMAGES
+    value: "true"
+  - name: REGISTRY_TITLE
+    value: Homelab Registry
+ingress:
+  enabled: true
+  hosts:
+    - registry-ui.home
