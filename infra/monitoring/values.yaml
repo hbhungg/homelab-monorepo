@@ -79,6 +79,12 @@ victoria-metrics-k8s-stack:
         org_role: Admin
     ingress:
       enabled: true
+      annotations:
+        gethomepage.dev/enabled: "true"
+        gethomepage.dev/name: Grafana
+        gethomepage.dev/group: Monitoring
+        gethomepage.dev/description: Metrics and dashboards
+        gethomepage.dev/href: http://metrics.home/login
       hosts:
         - metrics.home
 

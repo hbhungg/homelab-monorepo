@@ -29,6 +29,11 @@ resources:
     cpu: 500m
 ingress:
   enabled: true
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: MFW
+    gethomepage.dev/group: Apps
+    gethomepage.dev/description: My public site
   hosts:
     - mfw.ddns.net
   tls:

@@ -35,6 +35,11 @@ service:
   type: NodePort
 ingress:
   enabled: true
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: WireGuard
+    gethomepage.dev/group: Apps
+    gethomepage.dev/description: VPN management
   hosts:
     - wg.home
 affinity:

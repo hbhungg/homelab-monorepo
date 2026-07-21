@@ -28,6 +28,10 @@ affinity:
 tolerations:
   {{- toYaml . | nindent 2 }}
 {{- end }}
+{{- with $app.initContainers }}
+initContainers:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
 containers:
   - name: {{ $key }}
     image: "{{ $app.image.repository }}:{{ $app.image.tag }}"

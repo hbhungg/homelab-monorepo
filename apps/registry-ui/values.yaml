@@ -20,5 +20,10 @@ env:
     value: Homelab Registry
 ingress:
   enabled: true
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Registry UI
+    gethomepage.dev/group: Apps
+    gethomepage.dev/description: Browse container registry
   hosts:
     - registry-ui.home

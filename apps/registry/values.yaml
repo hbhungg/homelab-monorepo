@@ -24,5 +24,10 @@ affinity:
                 - ubuntu
 ingress:
   enabled: true
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Registry
+    gethomepage.dev/group: Apps
+    gethomepage.dev/description: Docker registry API
   hosts:
     - registry.home

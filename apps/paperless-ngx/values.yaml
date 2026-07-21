@@ -50,6 +50,11 @@ resources:
     cpu: 1000m
 ingress:
   enabled: true
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Paperless
+    gethomepage.dev/group: Apps
+    gethomepage.dev/description: Document management
   hosts:
     - paperless.home
 affinity:
