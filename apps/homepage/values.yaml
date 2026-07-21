@@ -9,9 +9,8 @@ ports:
     containerPort: 3000
     protocol: TCP
 volumeMounts:
-  - mountPath: /app/config/custom.js
+  - mountPath: /app/config
     name: homepage-config
-    subPath: custom.js
   - mountPath: /app/config/logs
     name: logs
 volumes:
