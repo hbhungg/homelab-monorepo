@@ -51,6 +51,7 @@ Note: rotating a secret in Bitwarden updates the k8s Secret within
 
 - **[postgres.home](postgres.home:5432)** - PostgreSQL on `192.168.0.241:5432`
   (MetalLB VIP; credentials in the `postgres-secret` k8s secret)
+- **[redis.home](redis.home:6379)** - Redis on `192.168.0.242:6379` (MetalLB VIP)
 
 ## External Services (Proxied to external devices)
 

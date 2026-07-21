@@ -54,6 +54,11 @@ configMap:
             answer "{{ .Name }} 60 IN A 192.168.0.241"
         }
 
+        template IN A redis.home {
+            match ^redis\.home\.$
+            answer "{{ .Name }} 60 IN A 192.168.0.242"
+        }
+
         # Handle *.home domains - IP dynamically looked up from traefik service
         template IN A home {
             match \.home\.$

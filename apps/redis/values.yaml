@@ -4,9 +4,13 @@ image:
   repository: redis
   tag: 7-alpine
 replicas: 1
+service:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.0.242
 ports:
   - name: redis
     containerPort: 6379
+    servicePort: 6379
     protocol: TCP
 persistence:
   enabled: true
