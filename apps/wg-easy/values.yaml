@@ -32,7 +32,8 @@ persistence:
   size: 256Mi
   mountPath: /etc/wireguard
 service:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 192.168.0.243
 ingress:
   enabled: true
   annotations:
