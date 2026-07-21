@@ -1,0 +1,261 @@
+{
+  "uid": "homelab-overview",
+  "title": "Homelab Overview",
+  "tags": ["homelab"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": {"from": "now-6h", "to": "now"},
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Datasource",
+        "current": {"text": "VictoriaMetrics", "value": "VictoriaMetrics"}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "Tier 1 — Is anything down?",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "id": 100,
+      "collapsed": false
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Nodes Up",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 1},
+      "targets": [
+        {
+          "expr": "up{job=~\".*node-exporter.*\"}",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "value_and_name"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"type": "value", "options": {"1": {"text": "UP", "color": "green"}, "0": {"text": "DOWN", "color": "red"}}}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Pods Not Ready",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 1},
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_ready{condition=\"false\"})",
+          "refId": "A"
+        }
+      ],
+      "options": {"colorMode": "background", "graphMode": "area", "textMode": "value"},
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Fullest PVC",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 6, "w": 6, "x": 12, "y": 1},
+      "targets": [
+        {
+          "expr": "topk(3, kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes)",
+          "legendFormat": "{{persistentvolumeclaim}}",
+          "refId": "A"
+        }
+      ],
+      "options": {"colorMode": "background", "graphMode": "none", "textMode": "value_and_name"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.7}, {"color": "red", "value": 0.85}]}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Root Disk Free (worst node)",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 6, "w": 6, "x": 18, "y": 1},
+      "targets": [
+        {
+          "expr": "min by (instance) (node_filesystem_avail_bytes{mountpoint=\"/\", fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{mountpoint=\"/\", fstype!~\"tmpfs|overlay\"})",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "options": {"colorMode": "background", "graphMode": "none", "textMode": "value_and_name"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 0.1}, {"color": "green", "value": 0.2}]}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "row",
+      "title": "Tier 2 — Node health over time",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 7},
+      "id": 101,
+      "collapsed": false
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "CPU Usage",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "avg by (instance) (1 - rate(node_cpu_seconds_total{mode=\"idle\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "percentunit", "min": 0, "max": 1, "custom": {"fillOpacity": 10, "showPoints": "never"}},
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Memory Usage",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "expr": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "percentunit", "min": 0, "max": 1, "custom": {"fillOpacity": 10, "showPoints": "never"}},
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Disk I/O",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(node_disk_read_bytes_total[$__rate_interval]))",
+          "legendFormat": "{{instance}} read",
+          "refId": "A"
+        },
+        {
+          "expr": "-sum by (instance) (rate(node_disk_written_bytes_total[$__rate_interval]))",
+          "legendFormat": "{{instance}} write",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "Bps", "custom": {"fillOpacity": 10, "showPoints": "never"}},
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Network Throughput",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "targets": [
+        {
+          "expr": "sum by (instance) (rate(node_network_receive_bytes_total{device!~\"lo|veth.*|wg.*\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}} rx",
+          "refId": "A"
+        },
+        {
+          "expr": "-sum by (instance) (rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|wg.*\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}} tx",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "Bps", "custom": {"fillOpacity": 10, "showPoints": "never"}},
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "type": "row",
+      "title": "VictoriaMetrics health",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24},
+      "id": 102,
+      "collapsed": false
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Ingestion Rate",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 25},
+      "targets": [
+        {
+          "expr": "sum(rate(vm_rows_inserted_total[$__rate_interval]))",
+          "legendFormat": "rows/s",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "short", "custom": {"fillOpacity": 10, "showPoints": "never"}},
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["mean", "max"]}, "tooltip": {"mode": "multi"}}
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "TSDB Storage Size",
+      "datasource": {"uid": "${datasource}"},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 25},
+      "targets": [
+        {
+          "expr": "sum(vm_data_size_bytes)",
+          "legendFormat": "data size",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "bytes", "min": 0, "custom": {"fillOpacity": 10, "showPoints": "never"}},
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi"}}
+    }
+  ]
+}

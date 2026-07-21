@@ -30,11 +30,45 @@ victoria-metrics-k8s-stack:
       probes:
         insecureSkipVerify: true
 
-  # Disable alert
+  # Alerting: vmalert evaluates VMRules (templates/alerts.yaml + chart defaults),
+  # alertmanager routes them to Discord. The webhook URL comes from Bitwarden via
+  # ESO (discord-secret / DISCORD_WEBHOOK) — never hardcode it here.
   alertmanager:
-    enabled: false
+    enabled: true
+    useManagedConfig: true
+    spec:
+      replicaCount: 1
+      nodeSelector:
+        kubernetes.io/hostname: ubuntu
+    config:
+      route:
+        receiver: discord
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+        routes:
+          # Meta-alerts (Watchdog, InfoInhibitor) and info-severity noise go nowhere.
+          - matchers:
+              - alertname =~ "Watchdog|InfoInhibitor"
+            receiver: "null"
+          - matchers:
+              - severity = "info"
+            receiver: "null"
+      receivers:
+        - name: "null"
+        - name: discord
+          discord_configs:
+            - webhook_url_secret:
+                name: discord-secret
+                key: DISCORD_WEBHOOK
+              send_resolved: true
+              title: "{{ .Status | toUpper }}: {{ .CommonLabels.alertname }}"
+              message: "{{ range .Alerts }}**{{ .Annotations.summary }}**\n{{ .Annotations.description }}\n{{ end }}"
   vmalert:
-    enabled: false
+    enabled: true
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: ubuntu
 
   # Grafana
   grafana:

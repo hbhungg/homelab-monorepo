@@ -32,3 +32,5 @@ externalSecrets:
     paperless-secret:
       PAPERLESS_SECRET_KEY: PAPERLESS_SECRET_KEY
       PAPERLESS_DBPASS: POSTGRES_PASSWORD
+    discord-secret:
+      DISCORD_WEBHOOK: DISCORD_WEBHOOK

@@ -1,0 +1,86 @@
+# Homelab alerting rules, evaluated by vmalert and routed to Discord via
+# alertmanager. Data sources: node-exporter, kube-state-metrics, kubelet.
+# NB: Prometheus annotation templates ($labels / $value) are escaped for Helm.
+{{- if (index .Values "victoria-metrics-k8s-stack" "vmalert" "enabled") }}
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: homelab-alerts
+  labels:
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: homelab.nodes
+      rules:
+        - alert: HomelabNodeDown
+          expr: up{job="node-exporter"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: {{ "Node {{ $labels.instance }} is down" | quote }}
+            description: {{ "node-exporter on {{ $labels.instance }} has been unreachable for >5m." | quote }}
+
+        - alert: HomelabNodeDiskLow
+          expr: |
+            node_filesystem_avail_bytes{mountpoint="/", fstype!~"tmpfs|overlay"}
+              / node_filesystem_size_bytes{mountpoint="/", fstype!~"tmpfs|overlay"} < 0.10
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: {{ "Root disk low on {{ $labels.instance }}" | quote }}
+            description: {{ "Less than 10% free on / for {{ $labels.instance }} (current: {{ $value | humanizePercentage }})." | quote }}
+
+        - alert: HomelabNodeMemoryHigh
+          expr: |
+            1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.90
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: {{ "Memory pressure on {{ $labels.instance }}" | quote }}
+            description: {{ "Memory usage above 90% for 30m on {{ $labels.instance }} (current: {{ $value | humanizePercentage }})." | quote }}
+
+    - name: homelab.workloads
+      rules:
+        - alert: HomelabPodNotReady
+          expr: |
+            sum by (namespace, pod) (kube_pod_status_ready{condition="false"}) > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: {{ "Pod {{ $labels.namespace }}/{{ $labels.pod }} not ready" | quote }}
+            description: {{ "Pod has been in a non-ready state for >15m." | quote }}
+
+        - alert: HomelabPVCFillingUp
+          expr: |
+            kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes > 0.85
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: {{ "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} filling up" | quote }}
+            description: {{ "PVC usage above 85% for 30m (current: {{ $value | humanizePercentage }})." | quote }}
+
+        - alert: HomelabStatefulSetDown
+          expr: |
+            kube_statefulset_status_replicas_ready == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: {{ "StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} has no ready replicas" | quote }}
+            description: {{ "All replicas unavailable for >5m." | quote }}
+
+        - alert: HomelabDeploymentDown
+          expr: |
+            kube_deployment_status_replicas_available == 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: {{ "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has no available replicas" | quote }}
+            description: {{ "All replicas unavailable for >10m." | quote }}
+{{- end }}
