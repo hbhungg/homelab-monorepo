@@ -44,9 +44,15 @@ spec:
 
     - name: homelab.workloads
       rules:
+        # Excludes Succeeded (completed Job) pods; a pod that finished its work
+        # is legitimately "not ready". Stuck pods on a NotReady node are covered
+        # by the node alerts instead.
         - alert: HomelabPodNotReady
           expr: |
-            sum by (namespace, pod) (kube_pod_status_ready{condition="false"}) > 0
+            sum by (namespace, pod) (
+              kube_pod_status_ready{condition="false"}
+              and on(namespace, pod) (kube_pod_status_phase{phase=~"Pending|Running|Failed|Unknown"} > 0)
+            ) > 0
           for: 15m
           labels:
             severity: warning
