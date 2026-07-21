@@ -84,7 +84,7 @@ victoria-metrics-k8s-stack:
         gethomepage.dev/name: Grafana
         gethomepage.dev/group: Monitoring
         gethomepage.dev/description: Metrics and dashboards
-        gethomepage.dev/href: http://metrics.home/login
+        gethomepage.dev/ping: http://metrics.home/api/health
       hosts:
         - metrics.home
 
