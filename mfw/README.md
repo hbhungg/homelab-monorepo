@@ -1,15 +1,18 @@
 # mfw
 
-To install dependencies:
+Personal site served at <https://mfw.ddns.net>. A tiny [Bun](https://bun.com)
+server (`serve.ts`) serving `static/index.html`.
+
+## Run locally
 
 ```bash
 bun install
+bun run dev
 ```
 
-To run:
+## Deploy
 
 ```bash
-bun run index.ts
+./deploy.sh            # build + push image to registry.home
+just deploy-app mfw    # from repo root, roll out to the cluster
 ```
-
-This project was created using `bun init` in bun v1.3.10. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.

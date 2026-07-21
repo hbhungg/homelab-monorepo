@@ -10,7 +10,10 @@ metadata:
   labels:
     app.kubernetes.io/name: {{ .Release.Name }}
 spec:
-{{- if $app.stateful }}
+{{- if $svc.loadBalancerIP }}
+  loadBalancerIP: {{ $svc.loadBalancerIP }}
+{{- end }}
+{{- if and $app.stateful (not $svc.type) }}
   clusterIP: None
 {{- else }}
   type: {{ $svcType }}

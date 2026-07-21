@@ -4,9 +4,13 @@ image:
   repository: postgres
   tag: 17-alpine
 replicas: 1
+service:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.0.241
 ports:
   - name: postgres
     containerPort: 5432
+    servicePort: 5432
     protocol: TCP
 envFrom:
   - secretRef:

@@ -10,8 +10,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.15",
-    "bun-types": "latest",
-    "turbo": "^2.6.3"
+    "bun-types": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.8.3"

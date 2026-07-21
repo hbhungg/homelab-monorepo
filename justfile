@@ -47,7 +47,7 @@ deploy-app name:
 _deps-infra:
     #!/usr/bin/env bash
     set -euo pipefail
-    for chart in infra/namespaces infra/cert-manager infra/external-secrets infra/monitoring infra/external-services; do
+    for chart in infra/namespaces infra/cert-manager infra/external-secrets infra/monitoring infra/external-services infra/metallb; do
         just _build-deps "$chart"
     done
 
@@ -66,6 +66,8 @@ _deploy-infra-core:
     helm upgrade --install cert-manager      infra/cert-manager       -f infra/cert-manager/values.yaml
     helm upgrade --install external-services infra/external-services -f infra/external-services/values.yaml
     helm upgrade --install monitoring        infra/monitoring        -f infra/monitoring/values.yaml
+    # --force-conflicts: metallb controller re-owns CRD webhook caBundle between upgrades
+    helm upgrade --install metallb           infra/metallb           -f infra/metallb/values.yaml -n metallb-system --create-namespace --force-conflicts
 
 # (private) Deploy one app release from charts/homelab.
 _deploy-app name:

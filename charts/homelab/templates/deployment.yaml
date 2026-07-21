@@ -9,6 +9,10 @@ metadata:
     app.kubernetes.io/name: {{ .Release.Name }}
 spec:
   replicas: {{ $app.replicas | default 1 }}
+  {{- if $app.hostNetwork }}
+  strategy:
+    type: Recreate
+  {{- end }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ .Release.Name }}

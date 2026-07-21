@@ -1,0 +1,9 @@
+# LAN IPs MetalLB is allowed to hand out to LoadBalancer services.
+# MUST be outside your router's DHCP range.
+# NOTE first install: deploy once with --set pool.enabled=false (CRDs first),
+# then deploy normally.
+pool:
+  enabled: true
+  name: lan-pool
+  addresses:
+    - 192.168.0.240-192.168.0.250

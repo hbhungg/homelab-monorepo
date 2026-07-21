@@ -1,6 +1,6 @@
 {
   "name": "mfw",
-  "module": "index.ts",
+  "module": "serve.ts",
   "type": "module",
   "private": true,
   "scripts": {

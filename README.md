@@ -47,6 +47,11 @@ Note: rotating a secret in Bitwarden updates the k8s Secret within
 - **[registry.home](http://registry.home)** - Docker container registry (port 5000)
 - **[wg.home](http://wg.home)** - WireGuard VPN management interface
 
+## Direct Access (MetalLB LoadBalancer)
+
+- **[postgres.home](postgres.home:5432)** - PostgreSQL on `192.168.0.241:5432`
+  (MetalLB VIP; credentials in the `postgres-secret` k8s secret)
+
 ## External Services (Proxied to external devices)
 
 - **[router.home](http://router.home)** - Network router interface (192.168.0.1)

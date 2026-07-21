@@ -59,9 +59,11 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 infra/cert-manager/charts/
 infra/external-secrets/charts/
 infra/monitoring/charts/
+infra/metallb/charts/
 infra/cert-manager/Chart.lock
 infra/external-secrets/Chart.lock
 infra/monitoring/Chart.lock
+infra/metallb/Chart.lock
 
 # Helm secrets (DO NOT COMMIT)
 infra/external-secrets/values-secrets.yaml
