@@ -49,6 +49,10 @@ configMap:
       #!/bin/sh
       set -eu
       # /dump/dump.sql is produced by the pg-dump initContainer.
+      test -s /dump/dump.sql || { echo "dump is empty/missing"; exit 1; }
+      # Initialize the restic repo on first run (idempotent: errors if it
+      # already exists, which we ignore).
+      restic init 2>/dev/null || true
       restic backup /dump/dump.sql --tag postgres
       # Prune to retention, then delete unreferenced data from the repo.
       restic forget \

@@ -1,20 +1,24 @@
 # K8up (upstream subchart) — restic-based PVC backup operator. Runs in the
 # release namespace (default, same as the apps/ESO) and watches all namespaces.
-# k8up.skipWithoutAnnotation=true makes PVC backup opt-in: only PVCs annotated
+# NOTE the double `k8up.k8up` nesting: the subchart is named `k8up` (the
+# dependency), and it has an internal config block also called `k8up`.
+# skipWithoutAnnotation=true makes PVC backup opt-in: only PVCs annotated
 #   k8up.io/backup: "true" are backed up. This avoids backing up the Postgres
 #   data PVC (which we dump separately via apps/postgres-backup) and Redis.
 k8up:
   enabled: true
-  skipWithoutAnnotation: true
   replicaCount: 1
+  k8up:
+    skipWithoutAnnotation: true
 
 # Schedule resources (kind: Schedule). Gated because the k8up subchart ships
 # its CRDs in templates/ — they are not established on a first install, so the
-# Schedule objects below would fail to apply. Bootstrap with
-# `--set schedules.enabled=false` first, then deploy normally (see justfile
-# `bootstrap`). This mirrors the external-secrets two-pass pattern.
+# Schedule objects below would fail to apply. `just bootstrap` handles this:
+# first pass installs with --set schedules.enabled=false (CRDs only), second
+# pass re-applies with this default (enabled) now that the CRDs exist.
+# `just deploy-infra` is single-pass and relies on the CRDs already existing.
 schedules:
-  enabled: false
+  enabled: true
 
   # Backblaze B2 bucket holding the restic repos. Credentials are synced by
   # External Secrets Operator into the `backblaze-b2` Secret (see

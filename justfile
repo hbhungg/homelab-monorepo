@@ -87,12 +87,23 @@ _bootstrap-k8up:
     helm upgrade --install k8up infra/k8up -f infra/k8up/values.yaml --set schedules.enabled=false
     helm upgrade --install k8up infra/k8up -f infra/k8up/values.yaml
 
+# Refresh cached Helm repo indexes. Run this after bumping a subchart
+# version in any Chart.yaml, or periodically to see new releases. The dep
+# builds during `just deploy*` use --skip-refresh, so they're fast.
+helm-update:
+	helm repo update
+
 # (private) Build helm deps for a chart if its Chart.yaml declares dependencies.
+# Skips the network entirely when the deps are already vendored in
+# <chart>/charts/*.tgz (checked via `helm dependency list`, which is local).
+# Run `just helm-update` then re-deploy after bumping a subchart version.
 _build-deps chart:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -f "{{chart}}/Chart.yaml" ] && grep -q "^dependencies:" "{{chart}}/Chart.yaml" 2>/dev/null; then
-        echo "  deps: {{chart}}"
+    [ -f "{{chart}}/Chart.yaml" ] || exit 0
+    grep -q "^dependencies:" "{{chart}}/Chart.yaml" 2>/dev/null || exit 0
+    if helm dependency list "{{chart}}" 2>/dev/null | grep -q missing; then
+        echo "  deps: {{chart}} (fetching missing)"
         helm dependency build "{{chart}}" >/dev/null 2>&1 || echo "    (warning: dep build failed, continuing)"
     fi
 

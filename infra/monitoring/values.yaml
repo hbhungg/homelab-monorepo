@@ -1,9 +1,11 @@
 # Metrics Server (for kubectl top and k9s CPU/MEM stats)
+# k3s ships its own metrics-server, so we disable the helm subchart to avoid
+# fighting k3s for ownership of the v1beta1.metrics.k8s.io APIService.
+# `kubectl top` and the metrics API keep working via k3s's bundled one.
+# Victoria Metrics scrapes kubelet/cAdvisor directly and does not depend on
+# the helm metrics-server.
 metrics-server:
-  enabled: true
-  args:
-    - --kubelet-insecure-tls
-    - --kubelet-preferred-address-types=InternalIP
+  enabled: false
 
 # Monitoring
 victoria-metrics-k8s-stack:

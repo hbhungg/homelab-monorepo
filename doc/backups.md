@@ -14,7 +14,7 @@ so recovery is `git clone` → `just deploy`.
 
 ## What gets backed up
 
-- **paperless-ngx PVC** (`paperless-ngx-data-0`) via K8up. This is the bulk of
+- **paperless-ngx PVC** (`data-paperless-ngx-0`) via K8up. This is the bulk of
   restorable data (media/docs). The PVC is annotated `k8up.io/backup: "true"`.
 - **Postgres** via a `pg_dumpall` CronJob → restic repo `b2:<bucket>:postgres`.
   We deliberately do **not** restic the live Postgres PVC — a filesystem
