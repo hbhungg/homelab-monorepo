@@ -1,0 +1,45 @@
+{{- if .Values.schedules.enabled }}
+{{- $sched := .Values.schedules }}
+{{- $b2 := $sched.b2 }}
+{{- range $item := $sched.items }}
+---
+apiVersion: k8up.io/v1
+kind: Schedule
+metadata:
+  name: {{ $item.name }}
+  namespace: {{ $item.namespace | default $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $item.name }}
+    app.kubernetes.io/part-of: homelab-backups
+spec:
+  backend:
+    b2:
+      bucket: {{ required "schedules.b2.bucket is required (set your B2 bucket name)" $b2.bucket }}
+      path: {{ $item.path }}
+      accountIDSecretRef:
+        name: backblaze-b2
+        key: B2_KEY_ID
+      accountKeySecretRef:
+        name: backblaze-b2
+        key: B2_APPLICATION_KEY
+    repoPasswordSecretRef:
+      name: backup-repo
+      key: password
+  backup:
+    schedule: {{ $item.backup.schedule | quote }}
+    failedJobsHistoryLimit: 2
+    successfulJobsHistoryLimit: 2
+  check:
+    schedule: {{ $item.check.schedule | quote }}
+    failedJobsHistoryLimit: 2
+    successfulJobsHistoryLimit: 1
+  prune:
+    schedule: {{ $item.prune.schedule | quote }}
+    retention:
+{{- with $item.prune.retention }}
+{{- toYaml . | nindent 6 }}
+{{- end }}
+    failedJobsHistoryLimit: 2
+    successfulJobsHistoryLimit: 1
+{{- end }}
+{{- end }}

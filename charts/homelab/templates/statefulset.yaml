@@ -1,5 +1,5 @@
 {{- $app := .Values -}}
-{{- if and $app.enabled $app.stateful }}
+{{- if and $app.enabled $app.stateful (not (($app.cron | default dict).enabled | default false)) }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -24,6 +24,10 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: data
+        {{- with $app.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
       spec:
         accessModes: ["ReadWriteOnce"]
         storageClassName: {{ $app.persistence.storageClass | default "local-path" }}

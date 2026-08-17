@@ -1,0 +1,11 @@
+apiVersion: v2
+name: homelab-k8up
+description: K8up restic backup operator + Schedules targeting Backblaze B2
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: k8up
+    version: 4.10.0
+    repository: https://k8up-io.github.io/k8up
+    condition: k8up.enabled

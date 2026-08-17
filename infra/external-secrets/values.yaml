@@ -34,3 +34,13 @@ externalSecrets:
       PAPERLESS_DBPASS: POSTGRES_PASSWORD
     discord-secret:
       DISCORD_WEBHOOK: DISCORD_WEBHOOK
+    # Backblaze B2 credentials for K8up + the postgres-backup CronJob.
+    # In Bitwarden Secrets Manager, create B2_KEY_ID (=keyID) and
+    # B2_APPLICATION_KEY (=app key) under this project.
+    backblaze-b2:
+      B2_KEY_ID: B2_KEY_ID
+      B2_APPLICATION_KEY: B2_APPLICATION_KEY
+    # Shared restic repository password. K8up and the postgres-backup CronJob
+    # both read this key (`password`). Create RESTIC_REPO_PASSWORD in Bitwarden.
+    backup-repo:
+      password: RESTIC_REPO_PASSWORD

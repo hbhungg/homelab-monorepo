@@ -60,10 +60,12 @@ infra/cert-manager/charts/
 infra/external-secrets/charts/
 infra/monitoring/charts/
 infra/metallb/charts/
+infra/k8up/charts/
 infra/cert-manager/Chart.lock
 infra/external-secrets/Chart.lock
 infra/monitoring/Chart.lock
 infra/metallb/Chart.lock
+infra/k8up/Chart.lock
 
 # Helm secrets (DO NOT COMMIT)
 infra/external-secrets/values-secrets.yaml

@@ -7,6 +7,10 @@ metadata:
   name: {{ .Release.Name }}-data
   labels:
     app.kubernetes.io/name: {{ .Release.Name }}
+  {{- with $app.persistence.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   accessModes:
     - ReadWriteOnce

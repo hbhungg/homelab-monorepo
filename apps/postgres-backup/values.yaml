@@ -1,0 +1,111 @@
+enabled: true
+
+# Runs as a CronJob (not a Deployment/StatefulSet). Dumps all Postgres
+# databases with pg_dumpall into an emptyDir, then pushes the dump to
+# Backblaze B2 via restic (separate restic repo: b2:<bucket>:postgres).
+# We do NOT back up the live Postgres PVC with K8up — a filesystem snapshot
+# of a running Postgres data dir is not crash-consistent.
+cron:
+  enabled: true
+  schedule: "0 2 * * *"              # daily 02:00 PT
+  timeZone: America/Los_Angeles
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 2
+  backoffLimit: 2
+  activeDeadlineSeconds: 1800        # give up after 30m
+
+image:
+  repository: restic/restic
+  tag: latest
+
+# Main container = restic. It runs /scripts/backup.sh (mounted from the
+# ConfigMap below). K8s `command` overrides the image ENTRYPOINT so we bypass
+# restic's ionice wrapper and run our own script directly.
+command: ["/bin/sh", "/scripts/backup.sh"]
+
+env:
+  - name: RESTIC_REPOSITORY
+    value: b2:homelab-backup-a1:postgres
+  - name: B2_ACCOUNT_ID
+    valueFrom:
+      secretKeyRef:
+        name: backblaze-b2
+        key: B2_KEY_ID
+  - name: B2_ACCOUNT_KEY
+    valueFrom:
+      secretKeyRef:
+        name: backblaze-b2
+        key: B2_APPLICATION_KEY
+  - name: RESTIC_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: backup-repo
+        key: password
+
+configMap:
+  data:
+    backup.sh: |
+      #!/bin/sh
+      set -eu
+      # /dump/dump.sql is produced by the pg-dump initContainer.
+      restic backup /dump/dump.sql --tag postgres
+      # Prune to retention, then delete unreferenced data from the repo.
+      restic forget \
+        --keep-last 7 \
+        --keep-daily 7 \
+        --keep-weekly 4 \
+        --keep-monthly 6 \
+        --prune
+
+# initContainer: pg_dumpall the whole cluster into /dump/dump.sql. Uses the
+# same postgres:17-alpine image as the postgres app for client compatibility.
+initContainers:
+  - name: pg-dump
+    image: postgres:17-alpine
+    env:
+      - name: PGHOST
+        value: postgres
+      - name: PGPORT
+        value: "5432"
+      - name: PGUSER
+        valueFrom:
+          secretKeyRef:
+            name: postgres-secret
+            key: POSTGRES_USER
+      - name: PGPASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: postgres-secret
+            key: POSTGRES_PASSWORD
+    command: ["/bin/sh", "-c"]
+    args:
+      - |
+        set -eu
+        pg_dumpall --clean --if-exists > /dump/dump.sql
+    volumeMounts:
+      - name: dump
+        mountPath: /dump
+
+volumes:
+  - name: dump
+    emptyDir: {}
+  - name: scripts
+    configMap:
+      name: postgres-backup-script
+      defaultMode: 0755
+
+volumeMounts:
+  - name: dump
+    mountPath: /dump
+  - name: scripts
+    mountPath: /scripts
+    readOnly: true
+
+resources:
+  requests:
+    memory: 128Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: 1000m

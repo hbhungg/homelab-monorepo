@@ -20,6 +20,7 @@ bootstrap:
     @echo "  bootstrapping external-secrets (CRDs first)..."
     helm upgrade --install external-secrets infra/external-secrets -f infra/external-secrets/values.yaml --set externalSecrets.enabled=false
     helm upgrade --install external-secrets infra/external-secrets -f infra/external-secrets/values.yaml
+    @just _bootstrap-k8up
     @just deploy-apps
 
 # Deploy all infrastructure charts.
@@ -28,6 +29,7 @@ deploy-infra:
     @just _deps-infra
     @just _deploy-infra-core
     helm upgrade --install external-secrets infra/external-secrets -f infra/external-secrets/values.yaml
+    helm upgrade --install k8up             infra/k8up              -f infra/k8up/values.yaml
 
 # Deploy every app under apps/.
 deploy-apps:
@@ -74,9 +76,16 @@ node-cmd cmd:
 _deps-infra:
     #!/usr/bin/env bash
     set -euo pipefail
-    for chart in infra/namespaces infra/cert-manager infra/external-secrets infra/monitoring infra/external-services infra/metallb; do
+    for chart in infra/namespaces infra/cert-manager infra/external-secrets infra/monitoring infra/external-services infra/metallb infra/k8up; do
         just _build-deps "$chart"
     done
+
+# (private) First-time K8up install: CRDs (shipped in the subchart) must be
+# established before the Schedule resources apply. Same two-pass idea as ESO.
+_bootstrap-k8up:
+    @echo "  bootstrapping k8up (CRDs first)..."
+    helm upgrade --install k8up infra/k8up -f infra/k8up/values.yaml --set schedules.enabled=false
+    helm upgrade --install k8up infra/k8up -f infra/k8up/values.yaml
 
 # (private) Build helm deps for a chart if its Chart.yaml declares dependencies.
 _build-deps chart:
@@ -95,6 +104,7 @@ _deploy-infra-core:
     helm upgrade --install monitoring        infra/monitoring        -f infra/monitoring/values.yaml
     # --force-conflicts: metallb controller re-owns CRD webhook caBundle between upgrades
     helm upgrade --install metallb           infra/metallb           -f infra/metallb/values.yaml -n metallb-system --create-namespace --force-conflicts
+    helm upgrade --install k8up               infra/k8up              -f infra/k8up/values.yaml
 
 # (private) Deploy one app release from charts/homelab.
 _deploy-app name:

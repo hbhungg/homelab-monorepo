@@ -1,0 +1,41 @@
+# K8up (upstream subchart) — restic-based PVC backup operator. Runs in the
+# release namespace (default, same as the apps/ESO) and watches all namespaces.
+# k8up.skipWithoutAnnotation=true makes PVC backup opt-in: only PVCs annotated
+#   k8up.io/backup: "true" are backed up. This avoids backing up the Postgres
+#   data PVC (which we dump separately via apps/postgres-backup) and Redis.
+k8up:
+  enabled: true
+  skipWithoutAnnotation: true
+  replicaCount: 1
+
+# Schedule resources (kind: Schedule). Gated because the k8up subchart ships
+# its CRDs in templates/ — they are not established on a first install, so the
+# Schedule objects below would fail to apply. Bootstrap with
+# `--set schedules.enabled=false` first, then deploy normally (see justfile
+# `bootstrap`). This mirrors the external-secrets two-pass pattern.
+schedules:
+  enabled: false
+
+  # Backblaze B2 bucket holding the restic repos. Credentials are synced by
+  # External Secrets Operator into the `backblaze-b2` Secret (see
+  # infra/external-secrets/values.yaml). The restic repo password lives in the
+  # `backup-repo` Secret. Both must exist in this namespace before backups run.
+  b2:
+    bucket: homelab-backup-a1    # <- set to your B2 bucket name
+
+  # One Schedule per restic repo. `path` is the prefix inside the bucket, so
+  # each entry is its own restic repo (separate snapshots/retention).
+  items:
+    - name: paperless
+      path: paperless          # restic repo: b2:<bucket>:paperless
+      backup:
+        schedule: "0 5 * * *"  # daily 05:00
+      check:
+        schedule: "0 4 * * 1"  # weekly Mon 04:00 (restic consistency check)
+      prune:
+        schedule: "0 3 * * 0"  # weekly Sun 03:00
+        retention:
+          keepLast: 3
+          keepDaily: 7
+          keepWeekly: 4
+          keepMonthly: 6

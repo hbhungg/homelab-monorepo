@@ -1,5 +1,5 @@
 {{- $app := .Values -}}
-{{- if and $app.enabled $app.ports }}
+{{- if and $app.enabled $app.ports (not (($app.cron | default dict).enabled | default false)) }}
 {{- $svc := $app.service | default dict }}
 {{- $svcType := $svc.type | default "ClusterIP" }}
 ---

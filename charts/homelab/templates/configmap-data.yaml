@@ -1,0 +1,19 @@
+{{/*
+Generic application ConfigMap (arbitrary data keys). Distinct from the
+Corefile-specific configmap.yaml. Used by apps that need to mount scripts or
+config into containers (e.g. apps/postgres-backup mounts backup.sh).
+*/}}
+{{- $app := .Values -}}
+{{- if and $app.enabled $app.configMap $app.configMap.data }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-script
+  labels:
+    app.kubernetes.io/name: {{ .Release.Name }}
+data:
+{{- with $app.configMap.data }}
+{{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}

@@ -47,6 +47,11 @@ persistence:
   size: 50Gi
   mountPath: /usr/src/paperless/data
   storageClass: local-path
+  annotations:
+    # K8up opt-in: with k8up.skipWithoutAnnotation=true, only PVCs carrying
+    # this annotation are backed up. paperless media/docs are the bulk of our
+    # restorable data.
+    k8up.io/backup: "true"
 resources:
   requests:
     memory: 512Mi

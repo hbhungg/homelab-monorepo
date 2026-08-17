@@ -1,5 +1,5 @@
 {{- $app := .Values -}}
-{{- if and $app.enabled (not $app.stateful) }}
+{{- if and $app.enabled (not $app.stateful) (not (($app.cron | default dict).enabled | default false)) }}
 ---
 apiVersion: apps/v1
 kind: Deployment
