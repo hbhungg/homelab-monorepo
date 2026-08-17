@@ -2,7 +2,10 @@ enabled: true
 stateful: true
 image:
   repository: ghcr.io/paperless-ngx/paperless-ngx
-  tag: latest
+  # Pinned: `latest` silently jumped v2.20.15 -> v3.0.5 on 2026-08-01,
+  # which changed the checksum algorithm (MD5 -> SHA-256) and wiped media
+  # (see the PAPERLESS_*_ROOT fix below). Pin to avoid silent upgrades.
+  tag: "3.0.5"
 replicas: 1
 ports:
   - name: http
