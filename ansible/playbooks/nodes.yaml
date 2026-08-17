@@ -1,0 +1,45 @@
+# Converge node-level config on all k3s nodes.
+# Replaces k3s-config/setup-node.sh (registries.yaml + /etc/hosts entries)
+# and handles common OS config. Safe to re-run (idempotent).
+#
+#   just nodes            # all nodes
+#   just nodes pi-1       # one node
+- name: Configure k3s nodes
+  hosts: all
+  tasks:
+    - name: Install base packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - vim
+          - htop
+          - iotop
+        state: present
+        update_cache: true
+
+    - name: Ensure /etc/rancher/k3s exists
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
+        mode: "0755"
+
+    - name: Install k3s registries.yaml
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../files/registries.yaml"
+        dest: /etc/rancher/k3s/registries.yaml
+        mode: "0644"
+      notify: Restart k3s
+
+    - name: Add /etc/hosts entry for registry.home
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "192.168.0.201 registry.home"
+        regexp: '^\S+\s+registry\.home'
+        state: present
+      notify: Restart k3s
+
+  handlers:
+    - name: Restart k3s
+      ansible.builtin.service:
+        name: "{{ 'k3s' if inventory_hostname in groups['k3s_server'] else 'k3s-agent' }}"
+        state: restarted

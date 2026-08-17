@@ -43,6 +43,33 @@ deploy-apps:
 deploy-app name:
     @just _deploy-app {{name}}
 
+# --- Node management (Ansible) -------------------------------------------
+
+# Check SSH connectivity to all nodes.
+nodes-ping:
+    ansible all -m ping --inventory ansible/inventory.yaml
+
+# Converge node-level config (packages, registries.yaml, /etc/hosts).
+nodes limit='all':
+    ansible-playbook ansible/playbooks/nodes.yaml --inventory ansible/inventory.yaml --limit {{limit}}
+
+# Upgrade OS packages on all nodes, one at a time.
+upgrade-os:
+    ansible-playbook ansible/playbooks/upgrade-os.yaml --inventory ansible/inventory.yaml
+
+# Install k3s on fresh node(s).
+k3s-install limit='all':
+    ansible-playbook ansible/playbooks/k3s-install.yaml --inventory ansible/inventory.yaml --limit {{limit}}
+
+# Rename a node (hostname + k8s re-register), e.g. `just rename-node pi-1 pi-worker`.
+rename-node node new_name:
+    ansible-playbook ansible/playbooks/rename-node.yaml --inventory ansible/inventory.yaml \
+        -e target_node={{node}} -e required_name={{new_name}}
+
+# Run an ad-hoc command on all nodes (e.g. `just node-cmd uptime`).
+node-cmd cmd:
+    ansible all -a "{{cmd}}" --inventory ansible/inventory.yaml --become
+
 # (private) Build helm deps for every infra chart that declares any.
 _deps-infra:
     #!/usr/bin/env bash

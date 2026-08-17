@@ -1,0 +1,56 @@
+# Rename a k3s node (changes hostname and re-registers it with the cluster).
+#
+#   just rename-node pi-1 pi-worker
+#
+# What it does:
+#   1. Sets the hostname (persistently, incl. cloud-init on Ubuntu)
+#   2. Restarts k3s / k3s-agent so the node re-registers under the new name
+#   3. Deletes the old node object from the cluster (run from your Mac's kubectl)
+#   4. Waits for the new node to become Ready
+#
+# NOTE: pods on the node are NOT drained first — for a 2-node homelab the
+# restart is quick enough. Drain manually first if you care about uptime.
+- name: Rename k3s node
+  hosts: "{{ target_node }}"
+  vars:
+    new_name: "{{ required_name }}"
+  tasks:
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: "{{ new_name }}"
+
+    - name: Prevent cloud-init from resetting the hostname on reboot
+      ansible.builtin.lineinfile:
+        path: /etc/cloud/cloud.cfg
+        regexp: '^preserve_hostname:'
+        line: 'preserve_hostname: true'
+      when: ansible_facts.virtualization_type is defined  # file only exists on cloud images
+
+    - name: Map new hostname to 127.0.1.1 in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1\s'
+        line: "127.0.1.1 {{ new_name }}"
+        state: present
+
+    - name: Restart k3s so the node re-registers with the new name
+      ansible.builtin.service:
+        name: "{{ 'k3s' if inventory_hostname in groups['k3s_server'] else 'k3s-agent' }}"
+        state: restarted
+
+    - name: Wait for k3s service to be up
+      ansible.builtin.wait_for:
+        timeout: 60
+
+- name: Clean up cluster-side node objects
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Delete the old node object (if still present)
+      ansible.builtin.command: kubectl delete node "{{ target_node }}"
+      failed_when: false # already gone is fine
+      changed_when: false
+
+    - name: Wait for the new node to become Ready
+      ansible.builtin.command: >-
+        kubectl wait --for=condition=Ready node/{{ required_name }} --timeout=120s

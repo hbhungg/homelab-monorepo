@@ -1,0 +1,20 @@
+# Upgrade OS packages on all nodes, one at a time, rebooting if required.
+#
+#   just upgrade-os
+- name: Upgrade OS packages
+  hosts: all
+  serial: 1 # never take both nodes down at once
+  tasks:
+    - name: Upgrade all packages
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+
+    - name: Check if reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Reboot if required
+      ansible.builtin.reboot:
+      when: reboot_required.stat.exists
