@@ -6,6 +6,9 @@
 #   just nodes pi-1       # one node
 - name: Configure k3s nodes
   hosts: all
+  # Self-contained privilege escalation: `just nodes` runs from the repo root,
+  # where ansible/ansible.cfg is not picked up automatically.
+  become: true
   tasks:
     - name: Install base packages
       ansible.builtin.apt:
@@ -30,10 +33,37 @@
         mode: "0644"
       notify: Restart k3s
 
+    # cloud-init ships `manage_etc_hosts: True`, which regenerates /etc/hosts
+    # from /etc/cloud/templates/hosts.debian.tmpl on every boot. That silently
+    # deleted the registry.home entry below, and containerd image pulls from the
+    # in-cluster registry then failed with `lookup registry.home: no such host`
+    # (most visibly after a Pi reboot). Opt out so the entry survives reboots.
+    - name: Check for cloud-init
+      ansible.builtin.stat:
+        path: /etc/cloud
+      register: cloud_init_dir
+
+    - name: Disable cloud-init /etc/hosts management
+      ansible.builtin.copy:
+        dest: /etc/cloud/cloud.cfg.d/99-homelab-manage-etc-hosts.cfg
+        content: |
+          # Managed by ansible/playbooks/nodes.yaml -- do not edit by hand.
+          # Stop cloud-init regenerating /etc/hosts on boot: it wipes
+          # hand-managed entries such as `registry.home`, which breaks image
+          # pulls from the in-cluster registry after a node reboot.
+          manage_etc_hosts: false
+        mode: "0644"
+      when: cloud_init_dir.stat.exists
+
+    # registry.home must resolve to Traefik's MetalLB VIP (192.168.0.240), not
+    # to a node IP: nothing serves the registry on the nodes themselves, and
+    # requests are routed by the traefik ingress Host header.
+    # NB: that VIP is auto-assigned from the MetalLB pool (infra/metallb), so if
+    # traefik ever lands on a different address, update this line too.
     - name: Add /etc/hosts entry for registry.home
       ansible.builtin.lineinfile:
         path: /etc/hosts
-        line: "192.168.0.201 registry.home"
+        line: "192.168.0.240 registry.home"
         regexp: '^\S+\s+registry\.home'
         state: present
       notify: Restart k3s
